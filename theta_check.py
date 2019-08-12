@@ -50,14 +50,15 @@ def read(fileName):
 		(x, y, theta, lbl) = line.split(' ')
 		X.append(float(x))
 		Y.append(float(y))
+		THETA.append(float(theta))
 		LBL.append(float(lbl.rstrip('\n')))
 
-	X_temp = X
-	Y_temp = Y
-	X = [-y for y in Y_temp]
-	Y = [x for x in X_temp]
+	# X_temp = X
+	# Y_temp = Y
+	# X = [-y for y in Y_temp]
+	# Y = [x for x in X_temp]
 
-	THETA = getTheta(X, Y)
+	# THETA = getTheta(X, Y)
 
 	return (X, Y, THETA, LBL)
 
