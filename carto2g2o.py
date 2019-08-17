@@ -3,38 +3,6 @@ import matplotlib.pyplot as plt
 import math
 import numpy as np
 
-def getTheta(X ,Y):
-	THETA = [None]*len(X)
-	for i in xrange(1, len(X)-1):
-		if(X[i+1] == X[i-1]):
-			if (Y[i+1]>Y[i-1]):
-				THETA[i] = math.pi/2
-			else:
-				THETA[i] = 3*math.pi/2
-			continue
-
-		THETA[i] = math.atan((Y[i+1]-Y[i-1])/(X[i+1]-X[i-1]))
-
-		if(X[i+1]-X[i-1] < 0):
-			THETA[i] += math.pi 
-
-	if X[1]==X[0]:
-		if Y[1] > Y[0]:
-			THETA[0] = math.pi/2
-		else:
-			THETA[0] = 3*math.pi/2
-	else:
-		THETA[0] = math.atan((Y[1]-Y[0])/(X[1]-X[0]))
-
-	if X[-1] == X[len(Y)-2]:
-		if Y[1] > Y[0]:
-			THETA[-1] = math.pi/2
-		else:
-			THETA[-1] = 3*math.pi/2
-	else:
-		THETA[-1] = math.atan((Y[-1]-Y[len(Y)-2])/(X[-1]-X[len(Y)-2]))
-
-	return THETA
 
 def read(fileName):
 	f = open(fileName, 'r')
@@ -50,21 +18,17 @@ def read(fileName):
 		(x, y, theta, lbl) = line.split(' ')
 		X.append(float(x))
 		Y.append(float(y))
+		THETA.append(float(theta))
 		LBL.append(float(lbl.rstrip('\n')))
 
-	X_temp = X
-	Y_temp = Y
-	X = [-y for y in Y_temp]
-	Y = [x for x in X_temp]
-
-	THETA = getTheta(X, Y)
-
 	return (X, Y, THETA, LBL)
+
 
 def meta(X, Y, THETA, LBL):
 	X_meta = []
 	Y_meta = []
 	THETA_meta = []
+	LBL_meta = []
 	st = end = 0
 
 	for i in xrange(1, len(LBL)):
@@ -76,13 +40,15 @@ def meta(X, Y, THETA, LBL):
 		X_meta.append(X[mid])
 		Y_meta.append(Y[mid])
 		THETA_meta.append(THETA[mid])
+		LBL_meta.append(LBL[mid])
 
 		st = end + 1
 		end = st
-	return (X_meta, Y_meta, THETA_meta)
+	return (X_meta, Y_meta, THETA_meta, LBL_meta)
+
 
 def writeG2O(X_meta,Y_meta,THETA_meta):
-	g2o = open("poses.g2o", 'w')
+	g2o = open('/run/user/1000/gvfs/sftp:host=ada.iiit.ac.in,user=udit/home/udit/share/poses.g2o', 'w')
 	for i, (x, y, theta) in enumerate(zip(X_meta,Y_meta,THETA_meta)):
 		line = "VERTEX_SE2 " + str(i) + " " + str(x) + " " + str(y) + " " + str(theta)
 		g2o.write(line)
@@ -104,10 +70,10 @@ def writeG2O(X_meta,Y_meta,THETA_meta):
 		g2o.write("\n")
 
 
-	e1 = (8, 12); e2 = (9, 11)
-	e3 = (17, 31); e4 = (18, 30); e5 = (19, 29); e6 = (22, 26)
-	# e7 = (33, 57); e8 = (39, 48)
-	edges = [e1, e2, e3, e4, e5, e6]
+	e1 = (12, 20); e2 = (16, 18); e3 = (15, 19)
+	e4 = (31, 35); e5 = (25, 39); e6 = (25, 39); 
+	e7 = (49, 57); e8 = (46, 60);
+	edges = [e1, e2, e3, e4, e5, e6, e7, e8]
 
 	info_mat = "200.0 0.0 0.0 1000.0 0.0 1000.0"
 	for e in edges:
@@ -124,7 +90,7 @@ def writeG2O(X_meta,Y_meta,THETA_meta):
 		g2o.write("\n")
 
 	corWidth = 1.789
-	edges = [(9, 23), (8, 21), (7, 17)]
+	edges = [(12, 26), (16, 32), (14, 28), (27, 47), (32, 50)]
 
 	info_mat = "200.0 0.0 0.0 1000.0 0.0 1000.0"
 	for e in edges:
@@ -144,31 +110,75 @@ def writeG2O(X_meta,Y_meta,THETA_meta):
 	g2o.write("\n")
 	g2o.close()	
 
-if __name__ == '__main__':
-	fileName = str(argv[1])
-	(X, Y, THETA, LBL) = read(fileName)
 
-	(X_meta, Y_meta, THETA_meta) = meta(X, Y, THETA, LBL)
+def draw_meta(X, Y, LBL):
+	X0 = []; Y0 = []; X1 = []; Y1 = []; X2 = []; Y2 =[]; X3 = []; Y3 = [];
+	for i in xrange(len(LBL)):
+		if LBL[i] == 0:
+			X0.append(X[i])
+			Y0.append(Y[i])
 
-	X = X[0:500]; Y = Y[0:500]
-	# X_meta = X_meta[0:33]; Y_meta = Y_meta[0:33]; THETA_meta = THETA_meta[0:33]
+		elif LBL[i] == 1:
+			X1.append(X[i])
+			Y1.append(Y[i])
 
-	# writeG2O(X_meta,Y_meta,THETA_meta)
+		elif LBL[i] == 2:
+			X2.append(X[i])
+			Y2.append(Y[i])
 
+		elif LBL[i] == 3:
+			X3.append(X[i])
+			Y3.append(Y[i])
+
+	fig = plt.figure()
+
+	ax = plt.subplot(1,1,1)
+	ax.plot(X0, Y0, 'ro', label='Rackspace')
+	ax.plot(X1, Y1, 'bo', label='Corridor')
+	ax.plot(X2, Y2, 'go', label='Trisection')
+	ax.plot(X3, Y3, 'yo', label='Intersection')
+
+	plt.plot(X_meta, Y_meta, 'k')
+
+	plt.show(block=True)
+
+
+def draw(X_meta, Y_meta, THETA_meta, theta=True):
 	plt.plot(X_meta, Y_meta, 'bo')
 	plt.plot(X_meta, Y_meta, 'k')
 
-	for i in xrange(len(X_meta)):
-		x2 = math.cos(THETA_meta[i]) + X_meta[i]
-		y2 = math.sin(THETA_meta[i]) + Y_meta[i]
-		plt.plot([X_meta[i], x2], [Y_meta[i], y2], 'r->')
+	if (theta == True):
+		for i in xrange(len(X_meta)):
+			x2 = math.cos(THETA_meta[i]) + X_meta[i]
+			y2 = math.sin(THETA_meta[i]) + Y_meta[i]
+			plt.plot([X_meta[i], x2], [Y_meta[i], y2], 'r->')
 	
-	# plt.plot(X, Y, 'bo')
-	# plt.plot(X_meta[17], Y_meta[17], 'ro')
-	# plt.plot(X_meta[7], Y_meta[7], 'ro')
+	plt.plot(X_meta[32], Y_meta[32], 'ro')
+	plt.plot(X_meta[50], Y_meta[50], 'ro')
 	# plt.plot(X_meta[39], Y_meta[39], 'ro')
 	# plt.plot(X_meta[48], Y_meta[48], 'ro')
-	plt.xlim(-5, 25)
-	plt.ylim(-15, 15)
 	plt.show()
+
+
+	
+
+
+
+if __name__ == '__main__':
+	fileName = str(argv[1])
+	(X, Y, THETA, LBL) = read(fileName)
+	sz = len(X)
+	beg = 0
+	X = X[beg:sz/4]; Y = Y[beg:sz/4]; THETA = THETA[beg:sz/4]; LBL = LBL[beg:sz/4]
+
+	sz = len(X)
+ 	ed = 780
+	X = X[0:ed]; Y = Y[0:ed]; THETA = THETA[0:ed]; LBL = LBL[0:ed]
+
+	(X_meta, Y_meta, THETA_meta, LBL_meta) = meta(X, Y, THETA, LBL)
+
+	writeG2O(X_meta,Y_meta,THETA_meta)
+	
+	draw_meta(X_meta, Y_meta, LBL_meta)
+	draw(X_meta, Y_meta, THETA_meta, theta=False)
 

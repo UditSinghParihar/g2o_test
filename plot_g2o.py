@@ -26,6 +26,6 @@ if __name__ == '__main__':
 
 	plt.plot(X, Y, 'bo')
 	plt.plot(X, Y, 'k')
-	plt.xlim(-20, 5)
-	plt.ylim(-20, 5)
+	# plt.xlim(-20, 5)
+	# plt.ylim(-20, 5)
 	plt.show()	
