@@ -5,6 +5,7 @@ import numpy as np
 from scipy import stats
 import csv
 
+
 def read(fileName):
 	X = []
 	Y = []
@@ -280,14 +281,12 @@ def manh(Node_meta, thetas):
 			binTheta = 180
 		elif((delTheta > 45 and delTheta < 135) or (delTheta < -240 and delTheta > -300)):
 			binTheta = 90
-		elif(delTheta > 250 and delTheta < 290):
+		elif(delTheta > 250 and delTheta < 290  or (delTheta < -75 and delTheta > -105)):
 			binTheta = 270
-		elif(delTheta < -75 and delTheta > -105):
-			binTheta = -90
-
+		
 		accTheta += binTheta
 		Nodes.append((leng, accTheta, line[4]))
-		print("Delta theta: ", delTheta, "Binned to: ", binTheta, "Total theta: ", accTheta, "Length: ", leng)
+		# print("Delta theta: ", delTheta, "Binned to: ", binTheta, "Total theta: ", accTheta, "Length: ", leng)
 
 	return Nodes
 
@@ -318,14 +317,16 @@ def extManh(Nodes_manh):
 
 	return Nodes
 
+
 if __name__ == '__main__':
 	fileName = str(argv[1])
 	(X, Y, THETA, LBL) = read(fileName)
 	
-	X = X[0:3000]; Y = Y[0:3000]; LBL = LBL[0:3000]
+	
+	# X = X[0:3000]; Y = Y[0:3000]; LBL = LBL[0:3000]
 	# X = X[200:450]; Y = Y[200:450]; LBL = LBL[200:450]
 	print(len(X))
-	# draw(X, Y, LBL)
+	draw(X, Y, LBL)
 
 	Node_meta = meta(X, Y, LBL)
 	Node_meta = outRemove(Node_meta)

@@ -160,10 +160,6 @@ def draw(X_meta, Y_meta, THETA_meta, theta=True):
 	plt.show()
 
 
-	
-
-
-
 if __name__ == '__main__':
 	fileName = str(argv[1])
 	(X, Y, THETA, LBL) = read(fileName)

@@ -4,6 +4,7 @@ import math
 import numpy as np
 from scipy import stats
 
+
 def read(fileName):
 	f = open(fileName, 'r')
 	A = f.readlines()
@@ -19,7 +20,7 @@ def read(fileName):
 		X.append(float(x))
 		Y.append(float(y))
 		THETA.append(float(theta))
-		LBL.append(float(lbl.rstrip('\n')))
+		LBL.append(int(lbl.rstrip('\n')))
 
 	return (X, Y, THETA, LBL)
 
@@ -43,8 +44,8 @@ def blueFix(st, end, X, Y, LBL, Node_meta):
 
 			if((delTheta > 70 and delTheta < 110) or (delTheta > -110 and delTheta < -70)):
 				xMid = X2[0]; yMid = Y2[0]
-				Node_meta.append((X[st], Y[st], xMid, yMid, LBL[mid]))
-				Node_meta.append((xMid, yMid, X[end], Y[end], LBL[mid]))
+				Node_meta.append((X[st], Y[st], xMid, yMid, LBL[mid], st, end))
+				Node_meta.append((xMid, yMid, X[end], Y[end], LBL[mid], st, end))
 				fill = False
 
 			# x1s = X1[0]; x1e = X1[-1] 
@@ -61,7 +62,7 @@ def blueFix(st, end, X, Y, LBL, Node_meta):
 			# plt.show()
 
 	if(fill == True):
-		Node_meta.append((X[st], Y[st], X[end], Y[end], LBL[mid]))
+		Node_meta.append((X[st], Y[st], X[end], Y[end], LBL[mid], st, end))
 
 	# ax = plt.subplot(1,1,1)
 	# ax.plot(X[st:end], Y[st:end], 'bo')
@@ -87,7 +88,7 @@ def meta(X, Y, LBL):
 			blueFix(st, end, X, Y, LBL, Node_meta)
 
 		else:
-			Node_meta.append((X[st], Y[st], X[end], Y[end], LBL[mid]))
+			Node_meta.append((X[st], Y[st], X[end], Y[end], LBL[mid], st, end))
 	
 		st = end + 1
 		end = st
@@ -319,8 +320,7 @@ if __name__ == '__main__':
 	
 	# X = X[0:3000]; Y = Y[0:3000]; LBL = LBL[0:3000]
 	# X = X[2950:3200]; Y = Y[2950:3200]; LBL = LBL[2950:3200]
-	print(len(X))
-	draw(X, Y, LBL)
+	# draw(X, Y, LBL)
 
 	Node_meta = meta(X, Y, LBL)
 	Node_meta = outRemove(Node_meta)
@@ -342,14 +342,5 @@ if __name__ == '__main__':
 	Nodes = extManh(Nodes_manh)
 	drawManh(Nodes)
 
-	# # for line in Nodes:
-	# # 	print(line)
-
-	# poses = open("mlp_in.txt", 'w')
-	# for line in Nodes:
-	# 	info = str(line[0])+" "+str(line[1])+" "+ str(line[2])+" "+ str(line[3])+" "+ str(line[4]) 
-	# 	poses.write(info)
-	# 	poses.write("\n")
-
-	# poses.close()
-	
+	# for line in Node_meta:
+	# 	print(line)
