@@ -110,10 +110,10 @@ def drawTheta(X, Y, LBL, thetas):
 			X3.append(X[i])
 			Y3.append(Y[i])
 
-	ax.plot(X0, Y0, 'ro', label='Rackspace')
-	ax.plot(X1, Y1, 'bo', label='Corridor')
-	ax.plot(X2, Y2, 'go', label='Trisection')
-	ax.plot(X3, Y3, 'yo', label='Intersection')
+	ax.plot(X0, Y0, 'ro', label='Rackspace', zorder = 2)
+	ax.plot(X1, Y1, 'bo', label='Corridor', zorder = 4)
+	ax.plot(X2, Y2, 'go', label='Trisection', zorder = 6)
+	ax.plot(X3, Y3, 'yo', label='Intersection', zorder = 8)
 
 	plt.plot(X, Y, 'k-')
 
@@ -132,47 +132,35 @@ def draw(X, Y, LBL):
 	for i in xrange(len(LBL)):
 		x = X[i]; y = Y[i]
 		if LBL[i] == 0:
-			ax.plot(x, y, 'ro', gid=i)
+			ax.plot(x, y, 'ro', gid=i, zorder = 2)
 
 		elif LBL[i] == 1:
-			ax.plot(x, y, 'bo', gid=i)
+			ax.plot(x, y, 'bo', gid=i, zorder = 4)
 
 		elif LBL[i] == 2:
-			ax.plot(x, y, 'go', gid=i)
+			ax.plot(x, y, 'go', gid=i, zorder = 6)
 
 		elif LBL[i] == 3:
-			ax.plot(x, y, 'yo', gid=i)
+			ax.plot(x, y, 'yo', gid=i, zorder = 8)
 
 
 	plt.plot(X, Y, 'k-')
 
 	fig.canvas.mpl_connect('motion_notify_event', on_plot_hover)
 
-	# p1 = 39; p2 = 48
-	# plt.plot(X[p1], Y[p1], 'ko', ms=15)
-	# plt.plot(X[p2], Y[p2], 'ko', ms=15)
-	# theta1 = calcTheta(X[p1-1], X[p1+1], Y[p1-1], Y[p1+1])
-	# theta2 = calcTheta(X[p2-1], X[p2+1], Y[p2-1], Y[p2+1])
-
-	# mag = 3
-	# x2a = mag*math.cos(theta1) + X[p1]
-	# y2a = mag*math.sin(theta1) + Y[p1]
-	# plt.plot([X[p1], x2a], [Y[p1], y2a], 'm->', ms=15)
-
-	# x2b = mag*math.cos(theta2) + X[p2]
-	# y2b = mag*math.sin(theta2) + Y[p2]
-	# plt.plot([X[p2], x2b], [Y[p2], y2b], 'm->', ms=15)
-
 	plt.show()
 
 
 def writeG2O(X_meta,Y_meta,THETA_meta):
-	g2o = open('/home/cair/backup/g2o_test/lessNoise.g2o', 'w')
+	g2o = open('/run/user/1000/gvfs/sftp:host=ada.iiit.ac.in,user=udit/home/udit/share/lessNoise.g2o', 'w')
 	for i, (x, y, theta) in enumerate(zip(X_meta,Y_meta,THETA_meta)):
 		line = "VERTEX_SE2 " + str(i) + " " + str(x) + " " + str(y) + " " + str(theta)
 		g2o.write(line)
 		g2o.write("\n")
 
+	# Odometry
+	g2o.write("# Odometry constraints")
+	g2o.write("\n")
 	info_mat = "500.0 0.0 0.0 500.0 0.0 500.0"
 	for i in xrange(1, len(X_meta)):
 		p1 = (X_meta[i-1], Y_meta[i-1], THETA_meta[i-1])
@@ -188,6 +176,50 @@ def writeG2O(X_meta,Y_meta,THETA_meta):
 		g2o.write(line)
 		g2o.write("\n")
 
+	# Section I
+	g2o.write("# Section I constraints")
+	g2o.write("\n")
+	info_mat = "700.0 0.0 0.0 400.0 0.0 1000.0"
+	i = 212; ii = 6848
+	del_x = str(0.1); del_y = str(0.5); del_theta = str(0)
+	
+	for cnt in xrange(38):
+		line = "EDGE_SE2 "+str(i)+" "+str(ii)+" "+del_x+" "+del_y+" "+del_theta+" "+info_mat
+		g2o.write(line)
+		g2o.write("\n")	
+		i += 1; ii += 1	
+
+	# Section II
+	g2o.write("# Section II constraints")
+	g2o.write("\n")
+	info_mat = "700.0 0.0 0.0 700.0 0.0 1000.0"
+	del_x = str(0.1); del_y = str(0.3); del_theta = str(0)
+	edges = [(5952, 262), (5956, 265), (5960, 488), (5964, 493), (5968, 758), (5972, 765), (5976, 1001), \
+			(5980, 1006), (5984, 1223), (5988, 1229), (5992, 1449), (5996, 1454), (6000, 1675), (6004, 1680), \
+			(6008, 1905), (6012, 1909)]
+
+	for e in edges:
+		line = "EDGE_SE2 "+str(e[1])+" "+str(e[0])+" "+del_x+" "+del_y+" "+del_theta+" "+info_mat
+		g2o.write(line)
+		g2o.write("\n")
+
+	# Section III
+	g2o.write("# Section III constraints")
+	g2o.write("\n")
+	info_mat = "700.0 0.0 0.0 700.0 0.0 1000.0"
+	del_x = str(0.1); del_y = str(0.1); del_theta = str(1.5*math.pi)
+	edges = [(142, 6456), (370, 6465), (619, 6474), (887, 6483), (1110, 6492), (1333, 6501), (1560, 6510), \
+			(1787, 6519), (2017, 6528), (2245, 6537), (2495, 6546), (2750, 6555), (4342, 6609), (4600, 6617)]
+
+	for e in edges:
+		line = "EDGE_SE2 "+str(e[0])+" "+str(e[1])+" "+del_x+" "+del_y+" "+del_theta+" "+info_mat
+		g2o.write(line)
+		g2o.write("\n")
+
+	g2o.write("FIX 0")
+	g2o.write("\n")
+	g2o.close()
+
 
 if __name__ == '__main__':
 	fileName = str(argv[1])
@@ -195,6 +227,6 @@ if __name__ == '__main__':
 	print(len(X))
 	# draw(X, Y, LBL)
 
-	drawTheta(X, Y, LBL, THETA)
+	# drawTheta(X, Y, LBL, THETA)
 
 	writeG2O(X, Y, THETA)
