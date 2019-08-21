@@ -54,6 +54,7 @@ def writeG2O(X_meta,Y_meta,THETA_meta):
 		g2o.write(line)
 		g2o.write("\n")
 
+	# info_mat = "1000.0 0.0 0.0 1000.0 0.0 0.00001"
 	info_mat = "500.0 0.0 0.0 500.0 0.0 500.0"
 	for i in xrange(1, len(X_meta)):
 		p1 = (X_meta[i-1], Y_meta[i-1], THETA_meta[i-1])

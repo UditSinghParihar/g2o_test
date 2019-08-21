@@ -7,7 +7,7 @@ import csv
 
 def getTheta(X ,Y):
 	THETA = [None]*len(X)
-	for i in xrange(1, len(X)-1):
+	for i in range(1, len(X)-1):
 		if(X[i+1] == X[i-1]):
 			if (Y[i+1]>Y[i-1]):
 				THETA[i] = math.pi/2
@@ -88,7 +88,7 @@ def drawTheta(X, Y, LBL, thetas):
 
 	X0 = []; Y0 = []; X1 = []; Y1 = []; X2 = []; Y2 =[]; X3 = []; Y3 = [];
 	
-	for i in xrange(len(LBL)):
+	for i in range(len(LBL)):
 
 		x2 = math.cos(thetas[i]) + X[i]
 		y2 = math.sin(thetas[i]) + Y[i]
@@ -129,7 +129,7 @@ def on_plot_hover(event):
 			
 
 def draw(X, Y, LBL):
-	for i in xrange(len(LBL)):
+	for i in range(len(LBL)):
 		x = X[i]; y = Y[i]
 		if LBL[i] == 0:
 			ax.plot(x, y, 'ro', gid=i, zorder = 2)
@@ -152,6 +152,9 @@ def draw(X, Y, LBL):
 
 
 def writeG2O(X_meta,Y_meta,THETA_meta):
+	sz = int(len(X_meta))
+	X_meta = X_meta[0:sz]; Y_meta = Y_meta[0:sz]; THETA_meta = THETA_meta[0:sz]
+
 	g2o = open('/run/user/1000/gvfs/sftp:host=ada.iiit.ac.in,user=udit/home/udit/share/lessNoise.g2o', 'w')
 	for i, (x, y, theta) in enumerate(zip(X_meta,Y_meta,THETA_meta)):
 		line = "VERTEX_SE2 " + str(i) + " " + str(x) + " " + str(y) + " " + str(theta)
@@ -161,8 +164,9 @@ def writeG2O(X_meta,Y_meta,THETA_meta):
 	# Odometry
 	g2o.write("# Odometry constraints")
 	g2o.write("\n")
+	# info_mat = "1000.0 0.0 0.0 1000.0 0.0 0.00001"
 	info_mat = "500.0 0.0 0.0 500.0 0.0 500.0"
-	for i in xrange(1, len(X_meta)):
+	for i in range(1, len(X_meta)):
 		p1 = (X_meta[i-1], Y_meta[i-1], THETA_meta[i-1])
 		p2 = (X_meta[i], Y_meta[i], THETA_meta[i])
 		T1_w = np.array([[math.cos(p1[2]), -math.sin(p1[2]), p1[0]], [math.sin(p1[2]), math.cos(p1[2]), p1[1]], [0, 0, 1]])
@@ -170,7 +174,8 @@ def writeG2O(X_meta,Y_meta,THETA_meta):
 		T2_1 = np.dot(np.linalg.inv(T1_w), T2_w)
 		del_x = str(T2_1[0][2])
 		del_y = str(T2_1[1][2])
-		del_theta = str(np.arccos(T2_1[0][0]))
+		# del_theta = str(np.arccos(T2_1[0][0]))
+		del_theta = str(math.atan2(T2_1[1, 0], T2_1[0, 0]))
 		
 		line = "EDGE_SE2 "+str(i-1)+" "+str(i)+" "+del_x+" "+del_y+" "+del_theta+" "+info_mat
 		g2o.write(line)
@@ -183,7 +188,7 @@ def writeG2O(X_meta,Y_meta,THETA_meta):
 	i = 212; ii = 6848
 	del_x = str(0.1); del_y = str(0.5); del_theta = str(0)
 	
-	for cnt in xrange(38):
+	for cnt in range(38):
 		line = "EDGE_SE2 "+str(i)+" "+str(ii)+" "+del_x+" "+del_y+" "+del_theta+" "+info_mat
 		g2o.write(line)
 		g2o.write("\n")	
