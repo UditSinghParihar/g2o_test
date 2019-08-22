@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import math
 import numpy as np
+import os
 
 
 def getTheta(X ,Y):
@@ -47,11 +48,65 @@ def draw(X, Y, THETA):
 		y2 = 0.25*math.sin(THETA[i]) + Y[i]
 		plt.plot([X[i], x2], [Y[i], y2], 'm->')
 
+	plt.show()
+
+
+def drawTwo(X1, Y1, THETA1, X2, Y2, THETA2):
+	ax = plt.subplot(111)
+	ax.plot(X1, Y1, 'ro', label='Ground Truth')
+	plt.plot(X1, Y1, 'k-')
+
+	for i in range(len(THETA1)):
+		x2 = 0.25*math.cos(THETA1[i]) + X1[i]
+		y2 = 0.25*math.sin(THETA1[i]) + Y1[i]
+		plt.plot([X1[i], x2], [Y1[i], y2], 'r->')
+
+	ax.plot(X2, Y2, 'bo', label='Optimized')
+	plt.plot(X2, Y2, 'k-')
+
+	for i in range(len(THETA2)):
+		x2 = 0.25*math.cos(THETA2[i]) + X2[i]
+		y2 = 0.25*math.sin(THETA2[i]) + Y2[i]
+		plt.plot([X2[i], x2], [Y2[i], y2], 'b->')
+
+	plt.legend()
+	plt.show()
+
+
+def drawThree(X1, Y1, THETA1, X2, Y2, THETA2, X3, Y3, THETA3):
+	ax = plt.subplot(111)
+	ax.plot(X1, Y1, 'ro', label='Ground Truth')
+	plt.plot(X1, Y1, 'k-')
+
+	for i in range(len(THETA1)):
+		x2 = 0.25*math.cos(THETA1[i]) + X1[i]
+		y2 = 0.25*math.sin(THETA1[i]) + Y1[i]
+		plt.plot([X1[i], x2], [Y1[i], y2], 'r->')
+
+	ax.plot(X2, Y2, 'bo', label='Optimized')
+	plt.plot(X2, Y2, 'k-')
+
+	for i in range(len(THETA2)):
+		x2 = 0.25*math.cos(THETA2[i]) + X2[i]
+		y2 = 0.25*math.sin(THETA2[i]) + Y2[i]
+		plt.plot([X2[i], x2], [Y2[i], y2], 'b->')
+
+	ax.plot(X3, Y3, 'go', label='Noisy')
+	plt.plot(X3, Y3, 'k-')
+
+	for i in range(len(THETA3)):
+		x2 = 0.25*math.cos(THETA3[i]) + X3[i]
+		y2 = 0.25*math.sin(THETA3[i]) + Y3[i]
+		plt.plot([X3[i], x2], [Y3[i], y2], 'g->')
+
+	plt.legend()
 	plt.show()	
 
 
 def writeOdom(X, Y, THETA):
-	g2o = open('/run/user/1000/gvfs/sftp:host=ada.iiit.ac.in,user=udit/home/udit/share/posesSim.g2o', 'w')
+	# g2o = open('/run/user/1000/gvfs/sftp:host=ada.iiit.ac.in,user=udit/home/udit/share/posesSim.g2o', 'w')
+	g2o = open('posesSim.g2o', 'w')
+
 	for i, (x, y, theta) in enumerate(zip(X,Y,THETA)):
 		line = "VERTEX_SE2 " + str(i) + " " + str(x) + " " + str(y) + " " + str(theta)
 		g2o.write(line)
@@ -154,7 +209,10 @@ def addNoise(X, Y, THETA):
 		del_theta = math.atan2(T2_1[1, 0], T2_1[0, 0])
 		
 		# Add noise
-		xNoise = np.random.normal(0, 0.03); yNoise = np.random.normal(0, 0.03); tNoise = np.random.normal(0, 0.03)
+		if(i<5):
+			xNoise = 0; yNoise = 0; tNoise = 0
+		else:
+			xNoise = np.random.normal(0, 0.03); yNoise = np.random.normal(0, 0.03); tNoise = np.random.normal(0, 0.03)
 		del_xN = del_x + xNoise; del_yN = del_y + yNoise; del_thetaN = del_theta + tNoise
 
 		# Convert to T2_1'
@@ -179,7 +237,13 @@ def addNoise(X, Y, THETA):
 
 def writeLoop(X, Y, THETA, g2o):
 	sz = X.size
-	pairs = [(15, sz-1), (16, sz-2), (17, sz-3), (18, sz-4), (19, sz-5)]
+
+	pairs = []
+	for i in range(0, 40, 2):
+		pairs.append((i, i+80))
+	# for i in range(len(X)):
+	# 	pairs.append((0, i))
+
 	info_mat = "500.0 0.0 0.0 500.0 0.0 500.0"
 
 	for p in pairs:
@@ -199,6 +263,30 @@ def writeLoop(X, Y, THETA, g2o):
 	g2o.close()
 
 
+def optimize():
+	cmd = "./g2o posesSim.g2o"
+	os.system(cmd)
+
+
+def readG2o(fileName):
+	f = open(fileName, 'r')
+	A = f.readlines()
+	f.close()
+
+	X = []
+	Y = []
+	THETA = []
+
+	for line in A:
+		if "VERTEX_SE2" in line:
+			(ver, ind, x, y, theta) = line.split(' ')
+			X.append(float(x))
+			Y.append(float(y))
+			THETA.append(float(theta.rstrip('\n')))
+
+	return (X, Y, THETA)
+
+
 if __name__ == '__main__':
 	(X, Y, THETA) = genTraj()
 	draw(X, Y, THETA)
@@ -208,3 +296,8 @@ if __name__ == '__main__':
 	writeLoop(X, Y, THETA, g2o)
 	draw(xN, yN, tN)
 
+	optimize()
+	(xOpt, yOpt, tOpt) = readG2o("opt.g2o")
+	drawTwo(X, Y, THETA, xOpt, yOpt, tOpt)
+
+	drawThree(X, Y, THETA, xOpt, yOpt, tOpt, xN, yN, tN)

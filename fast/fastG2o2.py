@@ -1,3 +1,6 @@
+# Usage : python fast/fastG2o2.py unoptimised_tracks.csv
+# Output : lessNoise.g2o file in current directory
+
 from sys import argv, exit
 import matplotlib.pyplot as plt
 import math
@@ -132,16 +135,16 @@ def draw(X, Y, LBL):
 	for i in range(len(LBL)):
 		x = X[i]; y = Y[i]
 		if LBL[i] == 0:
-			ax.plot(x, y, 'ro', gid=i, zorder = 2)
+			ax.plot(x, y, 'ro', gid=i, zorder = 2, markersize=5)
 
 		elif LBL[i] == 1:
-			ax.plot(x, y, 'bo', gid=i, zorder = 4)
+			ax.plot(x, y, 'bo', gid=i, zorder = 4, markersize=5)
 
 		elif LBL[i] == 2:
-			ax.plot(x, y, 'go', gid=i, zorder = 6)
+			ax.plot(x, y, 'go', gid=i, zorder = 6, markersize=5)
 
 		elif LBL[i] == 3:
-			ax.plot(x, y, 'yo', gid=i, zorder = 8)
+			ax.plot(x, y, 'yo', gid=i, zorder = 8, markersize=5)
 
 
 	plt.plot(X, Y, 'k-')
@@ -155,7 +158,9 @@ def writeG2O(X_meta,Y_meta,THETA_meta):
 	sz = int(len(X_meta))
 	X_meta = X_meta[0:sz]; Y_meta = Y_meta[0:sz]; THETA_meta = THETA_meta[0:sz]
 
-	g2o = open('/run/user/1000/gvfs/sftp:host=ada.iiit.ac.in,user=udit/home/udit/share/lessNoise.g2o', 'w')
+	# g2o = open('/run/user/1000/gvfs/sftp:host=ada.iiit.ac.in,user=udit/home/udit/share/lessNoise.g2o', 'w')
+	g2o = open('lessNoise.g2o', 'w')
+	
 	for i, (x, y, theta) in enumerate(zip(X_meta,Y_meta,THETA_meta)):
 		line = "VERTEX_SE2 " + str(i) + " " + str(x) + " " + str(y) + " " + str(theta)
 		g2o.write(line)
@@ -174,7 +179,6 @@ def writeG2O(X_meta,Y_meta,THETA_meta):
 		T2_1 = np.dot(np.linalg.inv(T1_w), T2_w)
 		del_x = str(T2_1[0][2])
 		del_y = str(T2_1[1][2])
-		# del_theta = str(np.arccos(T2_1[0][0]))
 		del_theta = str(math.atan2(T2_1[1, 0], T2_1[0, 0]))
 		
 		line = "EDGE_SE2 "+str(i-1)+" "+str(i)+" "+del_x+" "+del_y+" "+del_theta+" "+info_mat
@@ -214,10 +218,75 @@ def writeG2O(X_meta,Y_meta,THETA_meta):
 	info_mat = "700.0 0.0 0.0 700.0 0.0 1000.0"
 	del_x = str(0.1); del_y = str(0.1); del_theta = str(1.5*math.pi)
 	edges = [(142, 6456), (370, 6465), (619, 6474), (887, 6483), (1110, 6492), (1333, 6501), (1560, 6510), \
-			(1787, 6519), (2017, 6528), (2245, 6537), (2495, 6546), (2750, 6555), (4342, 6609), (4600, 6617)]
+			(1787, 6519), (2017, 6528), (2245, 6537), (2495, 6546), (2750, 6555), (3047, 6564), (3304, 6573), \
+			(3562, 6582), (3822, 6591), (4082, 6600), (4342, 6609), (4600, 6617)]
 
 	for e in edges:
 		line = "EDGE_SE2 "+str(e[0])+" "+str(e[1])+" "+del_x+" "+del_y+" "+del_theta+" "+info_mat
+		g2o.write(line)
+		g2o.write("\n")
+
+	# Section IV
+	g2o.write("# Section IV constraints")
+	g2o.write("\n")
+	info_mat = "700.0 0.0 0.0 700.0 0.0 700.0"
+	del_x = str(0.1); del_y = str(0.1); del_theta = str(0)
+	edges = [(2623, 6044), (2627, 6049), (2900, 6054), (2905, 6058), (3180, 6063), (3185, 6068), (3437, 6073),\
+			(3443, 6078), (3697, 6082), (3702, 6087), (3955, 6092), (3960, 6097), (4214, 6102),\
+			(4220, 6107), (4476, 6111), (4480, 6116), (4731, 6121), (4735, 6126)]
+
+	for e in edges:
+		line = "EDGE_SE2 "+str(e[0])+" "+str(e[1])+" "+del_x+" "+del_y+" "+del_theta+" "+info_mat
+		g2o.write(line)
+		g2o.write("\n")
+
+	# Section V
+	g2o.write("# Section V constraints")
+	g2o.write("\n")
+	info_mat = "700.0 0.0 0.0 700.0 0.0 1000.0"
+	del_x = str(0.1); del_y = str(0.1); del_theta = str(math.pi)
+	edges = [(2144, 2358), (2172, 2330)]
+
+	for e in edges:
+		line = "EDGE_SE2 "+str(e[0])+" "+str(e[1])+" "+del_x+" "+del_y+" "+del_theta+" "+info_mat
+		g2o.write(line)
+		g2o.write("\n")
+
+	# Section VI
+	g2o.write("# Section VI constraints")
+	g2o.write("\n")
+	info_mat = "700.0 0.0 0.0 700.0 0.0 700.0"
+
+	for i in range(1, 235):
+		p1 = (X_meta[1], Y_meta[1], THETA_meta[1])
+		p2 = (X_meta[i], Y_meta[i], THETA_meta[i])
+		T1_w = np.array([[math.cos(p1[2]), -math.sin(p1[2]), p1[0]], [math.sin(p1[2]), math.cos(p1[2]), p1[1]], [0, 0, 1]])
+		T2_w = np.array([[math.cos(p2[2]), -math.sin(p2[2]), p2[0]], [math.sin(p2[2]), math.cos(p2[2]), p2[1]], [0, 0, 1]])
+		T2_1 = np.dot(np.linalg.inv(T1_w), T2_w)
+		del_x = str(T2_1[0][2])
+		del_y = str(T2_1[1][2])
+		del_theta = str(math.atan2(T2_1[1, 0], T2_1[0, 0]))
+		
+		line = "EDGE_SE2 "+str(1)+" "+str(i)+" "+del_x+" "+del_y+" "+del_theta+" "+info_mat
+		g2o.write(line)
+		g2o.write("\n")
+
+	# Section VII
+	g2o.write("# Section VII constraints")
+	g2o.write("\n")
+	info_mat = "700.0 0.0 0.0 700.0 0.0 700.0"
+
+	for i in range(6393, 6505):
+		p1 = (X_meta[6392], Y_meta[6392], THETA_meta[6392])
+		p2 = (X_meta[i], Y_meta[i], THETA_meta[i])
+		T1_w = np.array([[math.cos(p1[2]), -math.sin(p1[2]), p1[0]], [math.sin(p1[2]), math.cos(p1[2]), p1[1]], [0, 0, 1]])
+		T2_w = np.array([[math.cos(p2[2]), -math.sin(p2[2]), p2[0]], [math.sin(p2[2]), math.cos(p2[2]), p2[1]], [0, 0, 1]])
+		T2_1 = np.dot(np.linalg.inv(T1_w), T2_w)
+		del_x = str(T2_1[0][2])
+		del_y = str(T2_1[1][2])
+		del_theta = str(math.atan2(T2_1[1, 0], T2_1[0, 0]))
+		
+		line = "EDGE_SE2 "+str(6392)+" "+str(i)+" "+del_x+" "+del_y+" "+del_theta+" "+info_mat
 		g2o.write(line)
 		g2o.write("\n")
 
