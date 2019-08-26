@@ -157,7 +157,8 @@ def draw(X, Y, LBL):
 	ax.plot(X1, Y1, 'bo', label='Corridor')
 	ax.plot(X2, Y2, 'go', label='Trisection')
 	ax.plot(X3, Y3, 'yo', label='Intersection')
-	
+	plt.plot(X, Y, 'k-')
+
 	plt.show()
 
 
@@ -255,6 +256,12 @@ def calcTheta(x1, x2, y1, y2):
 	return theta
 
 
+def getPositve(ang):
+	if(ang < 0):
+		ang += 360
+	return ang
+
+
 def manh(Node_meta, thetas):
 	Nodes = []; accTheta = 270; Thetas = []
 	line = Node_meta[0]
@@ -269,30 +276,35 @@ def manh(Node_meta, thetas):
 		x = [line[0], line[2]]; y = [line[1], line[3]]
 		leng = ((x[0]-x[1])**2 + (y[0]-y[1])**2)**(0.5)
 
-		delTheta = math.degrees(thetas[i]-thetas[i-1])
+		# delTheta = math.degrees(thetas[i]-thetas[i-1])
+		curAng = getPositve(math.degrees(thetas[i])); prevAng = getPositve(math.degrees(thetas[i-1]))
+		delTheta = curAng - prevAng
 
 		binTheta = 0
-		# if(delTheta > -45 and delTheta < 45):
-		# 	binTheta = 0
-		# elif((delTheta > 150 and delTheta < 210) or (delTheta < -160 and delTheta > -200)):
-		# 	binTheta = 180
-		# elif((delTheta > 45 and delTheta < 135) or (delTheta < -240 and delTheta > -300)):
-		# 	binTheta = 90
-		# elif((delTheta > 250 and delTheta < 290) or (delTheta < -75 and delTheta > -105)):
-		# 	binTheta = 270
-
-		if((delTheta > 0 and delTheta < 45) or (delTheta > 315 and delTheta < 360) or (delTheta < 0 and delTheta > -45) or (delTheta < -315 and delTheta > -360)):
-			binTheta = 0
-		elif((delTheta > 45 and delTheta < 135) or (delTheta < -225 and delTheta > -315)):
-			binTheta = 90
-		elif((delTheta > 135 and delTheta < 225) or (delTheta < -135 and delTheta > -225)):
-			binTheta = 180
-		elif((delTheta > 225 and delTheta < 315) or (delTheta < -45 and delTheta > -135)):
-			binTheta = 270
+		
+		# Hack : Shifted boundary from -45 to -38 for blue
+		if(line[4] == 1):
+			if((delTheta > 0 and delTheta < 45) or (delTheta > 315 and delTheta < 360) or (delTheta < 0 and delTheta > -38) or (delTheta < -315 and delTheta > -360)):
+				binTheta = 0
+			elif((delTheta > 45 and delTheta < 135) or (delTheta < -225 and delTheta > -315)):
+				binTheta = 90
+			elif((delTheta > 135 and delTheta < 225) or (delTheta < -135 and delTheta > -225)):
+				binTheta = 180
+			elif((delTheta > 225 and delTheta < 315) or (delTheta < -38 and delTheta > -135)):
+				binTheta = 270
+		else:
+			if((delTheta > 0 and delTheta < 45) or (delTheta > 315 and delTheta < 360) or (delTheta < 0 and delTheta > -45) or (delTheta < -315 and delTheta > -360)):
+				binTheta = 0
+			elif((delTheta > 45 and delTheta < 135) or (delTheta < -225 and delTheta > -315)):
+				binTheta = 90
+			elif((delTheta > 135 and delTheta < 225) or (delTheta < -135 and delTheta > -225)):
+				binTheta = 180
+			elif((delTheta > 225 and delTheta < 315) or (delTheta < -45 and delTheta > -135)):
+				binTheta = 270
 
 		accTheta += binTheta
 		Nodes.append((leng, accTheta, line[4]))
-		# print("Delta theta: ", delTheta, "Binned to: ", binTheta, "Total theta: ", accTheta, "Length: ", leng)
+		print("Delta theta: ", delTheta, "Binned to: ", binTheta, "Total theta: ", accTheta, "Length: ", leng, "Label: ", line[4], "Cur. Angle: ", curAng, "Pre. Angle: ", prevAng)
 
 	return Nodes
 
@@ -305,8 +317,8 @@ def extManh(Nodes_manh):
 		mag = line[0]; theta = line[1]; lbl = line[2]
 		
 		if((theta - Nodes_manh[i-1][1] == 180) and (i != 0)):
-			l1 = l2 - 0.2
-			b1 = b2 + 0.2
+			l1 = l2 - 0.1
+			b1 = b2 + 0.1
 			l2 = l1 + mag*math.cos(math.radians(theta))
 			b2 = b1 + mag*math.sin(math.radians(theta))
 			Nodes.append((l1, b1, l2, b2, lbl))
@@ -327,14 +339,14 @@ if __name__ == '__main__':
 	fileName = str(argv[1])
 	(X, Y, THETA, LBL) = read(fileName)
 	
-	# X = X[0:3000]; Y = Y[0:3000]; LBL = LBL[0:3000]
-	# X = X[2950:3200]; Y = Y[2950:3200]; LBL = LBL[2950:3200]
+	# X = X[0:1500]; Y = Y[0:1500]; LBL = LBL[0:1500]
+	# X = X[0:1150]; Y = Y[0:1150]; LBL = LBL[0:1150]
 	print(len(X))
 	draw(X, Y, LBL)
 
 	Node_meta = meta(X, Y, LBL)
 	Node_meta = outRemove(Node_meta)
-	drawMeta(Node_meta)
+	# drawMeta(Node_meta)
 
 	Nodes = []
 
@@ -346,7 +358,7 @@ if __name__ == '__main__':
 
 		theta = calcTheta(x[0], x[1], y[0], y[1])
 		thetas.append(theta)
-	# drawTheta(Node_meta, thetas)
+	drawTheta(Node_meta, thetas)
 	
 	Nodes_manh = manh(Node_meta, thetas)
 	Nodes = extManh(Nodes_manh)

@@ -64,7 +64,9 @@ def writeG2O(X_meta,Y_meta,THETA_meta):
 		T2_1 = np.dot(np.linalg.inv(T1_w), T2_w)
 		del_x = str(T2_1[0][2])
 		del_y = str(T2_1[1][2])
-		del_theta = str(np.arccos(T2_1[0][0]))
+		# Devil below
+		# del_theta = str(np.arccos(T2_1[0][0]))
+		del_theta = str(math.atan2(T2_1[1, 0], T2_1[0, 0]))
 		
 		line = "EDGE_SE2 "+str(i-1)+" "+str(i)+" "+del_x+" "+del_y+" "+del_theta+" "+info_mat
 		g2o.write(line)

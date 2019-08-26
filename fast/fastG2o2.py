@@ -158,8 +158,7 @@ def writeG2O(X_meta,Y_meta,THETA_meta):
 	sz = int(len(X_meta))
 	X_meta = X_meta[0:sz]; Y_meta = Y_meta[0:sz]; THETA_meta = THETA_meta[0:sz]
 
-	# g2o = open('/run/user/1000/gvfs/sftp:host=ada.iiit.ac.in,user=udit/home/udit/share/lessNoise.g2o', 'w')
-	g2o = open('lessNoise.g2o', 'w')
+	g2o = open('/run/user/1000/gvfs/sftp:host=ada.iiit.ac.in,user=udit/home/udit/share/lessNoise.g2o', 'w')
 	
 	for i, (x, y, theta) in enumerate(zip(X_meta,Y_meta,THETA_meta)):
 		line = "VERTEX_SE2 " + str(i) + " " + str(x) + " " + str(y) + " " + str(theta)
@@ -169,7 +168,6 @@ def writeG2O(X_meta,Y_meta,THETA_meta):
 	# Odometry
 	g2o.write("# Odometry constraints")
 	g2o.write("\n")
-	# info_mat = "1000.0 0.0 0.0 1000.0 0.0 0.00001"
 	info_mat = "500.0 0.0 0.0 500.0 0.0 500.0"
 	for i in range(1, len(X_meta)):
 		p1 = (X_meta[i-1], Y_meta[i-1], THETA_meta[i-1])
@@ -299,7 +297,7 @@ if __name__ == '__main__':
 	fileName = str(argv[1])
 	(X, Y, THETA, LBL) = read(fileName)
 	print(len(X))
-	# draw(X, Y, LBL)
+	draw(X, Y, LBL)
 
 	# drawTheta(X, Y, LBL, THETA)
 
