@@ -3,34 +3,31 @@ import matplotlib.pyplot as plt
 import math
 import numpy as np
 from scipy import stats
-import csv
 
 
 def read(fileName):
+	f = open(fileName, 'r')
+	A = f.readlines()
+	f.close()
+
 	X = []
 	Y = []
 	THETA = []
 	LBL = []
 
-	with open(fileName, 'rt') as f:
-		A = csv.reader(f)
-
-
-		for idx, line in enumerate(A):
-			if(idx == 0):
-				continue
-			else:
-				X.append(float(line[1]))
-				Y.append(float(line[2]))
-				THETA.append(float(line[3]))
-				LBL.append(float(line[4]))
+	for line in A:
+		(x, y, theta, lbl) = line.split(' ')
+		X.append(float(x))
+		Y.append(float(y))
+		THETA.append(float(theta))
+		LBL.append(int(lbl.rstrip('\n')))
 
 	return (X, Y, THETA, LBL)
 
 
 def blueFix(st, end, X, Y, LBL, Node_meta):
 	mid = st + (end - st)/2
-	# print("Blue nodes: ", end-st)
+
 	xMid = 0; yMid =0; fill = True
 
 	for i in xrange(st, end-9):
@@ -47,10 +44,8 @@ def blueFix(st, end, X, Y, LBL, Node_meta):
 
 			if((delTheta > 70 and delTheta < 110) or (delTheta > -110 and delTheta < -70)):
 				xMid = X2[0]; yMid = Y2[0]
-				# Node_meta.append((X[st], Y[st], xMid, yMid, LBL[mid]))
-				# Node_meta.append((xMid, yMid, X[end], Y[end], LBL[mid]))
-				Node_meta.append((X[st], Y[st], xMid, yMid, LBL[mid], st, i+8))
-				Node_meta.append((xMid, yMid, X[end], Y[end], LBL[mid], i+8, end))
+				Node_meta.append((X[st], Y[st], xMid, yMid, LBL[mid], st, end))
+				Node_meta.append((xMid, yMid, X[end], Y[end], LBL[mid], st, end))
 				fill = False
 
 			# x1s = X1[0]; x1e = X1[-1] 
@@ -67,7 +62,6 @@ def blueFix(st, end, X, Y, LBL, Node_meta):
 			# plt.show()
 
 	if(fill == True):
-		# Node_meta.append((X[st], Y[st], X[end], Y[end], LBL[mid]))
 		Node_meta.append((X[st], Y[st], X[end], Y[end], LBL[mid], st, end))
 
 	# ax = plt.subplot(1,1,1)
@@ -91,15 +85,9 @@ def meta(X, Y, LBL):
 		mid = st + (end - st)/2
 		
 		if (LBL[mid] == 1):
-			if((end-st) > 75):
-				steps = np.linspace(st, end, 4).astype(int)
-				blueFix(st, steps[1], X, Y, LBL, Node_meta)
-				blueFix(steps[1], steps[2], X, Y, LBL, Node_meta)
-				blueFix(steps[2], end, X, Y, LBL, Node_meta)
-			else:
-				blueFix(st, end, X, Y, LBL, Node_meta)
+			blueFix(st, end, X, Y, LBL, Node_meta)
+
 		else:
-			# Node_meta.append((X[st], Y[st], X[end], Y[end], LBL[mid]))
 			Node_meta.append((X[st], Y[st], X[end], Y[end], LBL[mid], st, end))
 	
 		st = end + 1
@@ -169,7 +157,8 @@ def draw(X, Y, LBL):
 	ax.plot(X1, Y1, 'bo', label='Corridor')
 	ax.plot(X2, Y2, 'go', label='Trisection')
 	ax.plot(X3, Y3, 'yo', label='Intersection')
-	
+	plt.plot(X, Y, 'k-')
+
 	plt.show()
 
 
@@ -233,7 +222,7 @@ def drawMeta(Node_meta):
 
 def outRemove(Node_meta):
 	i = 0; Nodes = []
-	# print(len(Node_meta[i]))
+
 	while (i < len(Node_meta)):
 		line = Node_meta[i]
 		lbl = line[4]
@@ -274,12 +263,14 @@ def getPositve(ang):
 
 
 def manh(Node_meta, thetas):
-	Nodes = []; accTheta = 0; Thetas = []
+	Nodes = []; accTheta = 270; Thetas = []
 	line = Node_meta[0]
 	x = [line[0], line[2]]; y = [line[1], line[3]]
 	leng = ((x[0]-x[1])**2 + (y[0]-y[1])**2)**(0.5)
 
+	Nodes.append((leng, accTheta, line[4]))
 	# print("Total theta: ", accTheta, "Length: ", leng)
+
 	for i in xrange(1, len(Node_meta)):
 		line = Node_meta[i]
 		x = [line[0], line[2]]; y = [line[1], line[3]]
@@ -290,14 +281,15 @@ def manh(Node_meta, thetas):
 
 		binTheta = 0
 		
+		# Hack : Shifted boundary from -45 to -38 for blue
 		if(line[4] == 1):
-			if((delTheta > 0 and delTheta < 45) or (delTheta > 315 and delTheta < 360) or (delTheta < 0 and delTheta > -45) or (delTheta < -315 and delTheta > -360)):
+			if((delTheta > 0 and delTheta < 45) or (delTheta > 315 and delTheta < 360) or (delTheta < 0 and delTheta > -38) or (delTheta < -315 and delTheta > -360)):
 				binTheta = 0
-			elif((delTheta > 55 and delTheta < 135) or (delTheta < -225 and delTheta > -315)):
+			elif((delTheta > 45 and delTheta < 135) or (delTheta < -225 and delTheta > -315)):
 				binTheta = 90
 			elif((delTheta > 135 and delTheta < 225) or (delTheta < -135 and delTheta > -225)):
 				binTheta = 180
-			elif((delTheta > 225 and delTheta < 315) or (delTheta < -45 and delTheta > -135)):
+			elif((delTheta > 225 and delTheta < 315) or (delTheta < -38 and delTheta > -135)):
 				binTheta = 270
 		else:
 			if((delTheta > 0 and delTheta < 45) or (delTheta > 315 and delTheta < 360) or (delTheta < 0 and delTheta > -45) or (delTheta < -315 and delTheta > -360)):
@@ -308,10 +300,10 @@ def manh(Node_meta, thetas):
 				binTheta = 180
 			elif((delTheta > 225 and delTheta < 315) or (delTheta < -45 and delTheta > -135)):
 				binTheta = 270
-		
+
 		accTheta += binTheta
-		Nodes.append((leng, accTheta, line[4], line[5], line[6]))
-		print("Delta theta: ", delTheta, "Binned to: ", binTheta, "Total theta: ", accTheta, "Label: ", line[4], "Cur. Angle: ", curAng, "Pre. Angle: ", prevAng)
+		Nodes.append((leng, accTheta, line[4]))
+		# print("Delta theta: ", delTheta, "Binned to: ", binTheta, "Total theta: ", accTheta, "Length: ", leng, "Label: ", line[4], "Cur. Angle: ", curAng, "Pre. Angle: ", prevAng)
 
 	return Nodes
 
@@ -321,59 +313,60 @@ def extManh(Nodes_manh):
 
 	l1 = 0; b1 = 0; l2 = 0; b2 = 0
 	for line in Nodes_manh:
-		mag = line[0]; theta = line[1]; lbl = line[2]; stPose = line[3]; endPose = line[4]
+		mag = line[0]; theta = line[1]; lbl = line[2]
 		
 		if((theta - Nodes_manh[i-1][1] == 180) and (i != 0)):
-			l1 = l2 - 0.2
-			b1 = b2 + 0.2
+			l1 = l2 - 0.1
+			b1 = b2 + 0.1
 			l2 = l1 + mag*math.cos(math.radians(theta))
 			b2 = b1 + mag*math.sin(math.radians(theta))
-			# if((lbl == 0) and (abs(b1-b2) < 0.25)):
-			# 	continue
-			Nodes.append((l1, b1, l2, b2, lbl, stPose, endPose))
-			
+			Nodes.append((l1, b1, l2, b2, lbl))
+
 		else:
 			l1 = l2
 			b1 = b2
 			l2 = l1 + mag*math.cos(math.radians(theta))
 			b2 = b1 + mag*math.sin(math.radians(theta))
 
-			# if((lbl == 0) and (abs(b1-b2) < 0.25)):
-			# 	continue
-			Nodes.append((l1, b1, l2, b2, lbl, stPose, endPose))
-			
+			Nodes.append((l1, b1, l2, b2, lbl))
+
 		i = i+1
 
 	return Nodes
 
 
 def writeMlp(Nodes, dense=True):
-	# Saving format: Rightward = b and Downwards = l
-
-	poses = open("mlp_in.txt", 'w')
+	poses = open("mlp_in2.txt", 'w')
 	for line in Nodes:
 		if(dense == True):
-			info = str(-line[1])+" "+str(line[0])+" "+ str(-line[3])+" "+ str(line[2])+" "+ str(line[4])+" "+str(line[5])+" "+str(line[6])
+			info = str(line[0])+" "+str(line[1])+" "+ str(line[2])+" "+ str(line[3])+" "+ str(line[4])+" "+str(line[5])+" "+str(line[6])
 		else:
-			# info = str(line[0])+" "+str(line[1])+" "+ str(line[2])+" "+ str(line[3])+" "+ str(line[4])
-			info = str(-line[1])+" "+str(line[0])+" "+ str(-line[3])+" "+ str(line[2])+" "+ str(line[4])
+			info = str(line[0])+" "+str(line[1])+" "+ str(line[2])+" "+ str(line[3])+" "+ str(line[4])
 		poses.write(info)
 		poses.write("\n")
 
 	poses.close()
 
 
+def getConstr(Nodes_manh, Nodes):
+	poses = []
+
+	for i in range(len(Nodes_manh)):	
+		theta = Nodes_manh[i][1]
+		l1 = Nodes[i][0]; b1 = Nodes[i][1]; l2 = Nodes[i][2]; b2 = Nodes[i][3]
+
+		poses.append((l1, b1, theta))
+		poses.append((l2, b2, theta))
+
+
+
 if __name__ == '__main__':
 	fileName = str(argv[1])
 	(X, Y, THETA, LBL) = read(fileName)
 	
-	
-	X = X[0:4490]; Y = Y[0:4490]; LBL = LBL[0:4490]
-	# X = X[4490:-1]; Y = Y[4490:-1]; LBL = LBL[4490:-1]
-	# X = X[4430:4900]; Y = Y[4430:4900]; LBL = LBL[4430:4900]
-	
+	# X = X[0:1500]; Y = Y[0:1500]; LBL = LBL[0:1500]
 	print(len(X))
-	draw(X, Y, LBL)
+	# draw(X, Y, LBL)
 
 	Node_meta = meta(X, Y, LBL)
 	Node_meta = outRemove(Node_meta)
@@ -389,10 +382,12 @@ if __name__ == '__main__':
 
 		theta = calcTheta(x[0], x[1], y[0], y[1])
 		thetas.append(theta)
-	drawTheta(Node_meta, thetas)
+	# drawTheta(Node_meta, thetas)
 	
 	Nodes_manh = manh(Node_meta, thetas)
 	Nodes = extManh(Nodes_manh)
-	drawManh(Nodes)
+	# drawManh(Nodes)
 
-	writeMlp(Nodes, dense=False)
+	writeMlp(Nodes, False)
+
+	getConstr(Nodes_manh, Nodes)

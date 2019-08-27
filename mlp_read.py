@@ -11,7 +11,7 @@ def read(fileName):
 
 	for line in A:
 		(l1, b1, l2, b2, lbl) = line.split(' ')
-		Node_meta.append((float(l1), float(b1), float(l2), float(b2), int(lbl.rstrip('\n'))))
+		Node_meta.append((float(l1), float(b1), float(l2), float(b2), float(lbl.rstrip('\n'))))
 
 	return Node_meta
 
@@ -39,8 +39,8 @@ def drawNode(Node_meta):
 			ax.plot(x, y, 'yo')
 			ax.plot(x, y, 'y-')
 
-	plt.xlim(-30, 45)
-	plt.ylim(-50, 25)
+	# plt.xlim(-30, 45)
+	# plt.ylim(-50, 25)
 	plt.show()
 
 
