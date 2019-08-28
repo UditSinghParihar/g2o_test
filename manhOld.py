@@ -30,7 +30,7 @@ def read(fileName):
 
 def blueFix(st, end, X, Y, LBL, Node_meta):
 	mid = st + (end - st)/2
-	# print("Blue nodes: ", end-st)
+
 	xMid = 0; yMid =0; fill = True
 
 	for i in xrange(st, end-9):
@@ -91,27 +91,8 @@ def meta(X, Y, LBL):
 		mid = st + (end - st)/2
 		
 		if (LBL[mid] == 1):
-			# Hack : Upper going corridor 
-			if(st > 5750 and end < 5948):
-				blueFix(st, 5850, X, Y, LBL, Node_meta)
-				blueFix(5850, 5861, X, Y, LBL, Node_meta)
-				blueFix(5861, end, X, Y, LBL, Node_meta)
-			
-			# Hack : Upper coming corridor
-			elif(st > 5976 and end < 6160):
-				blueFix(st, 6018, X, Y, LBL, Node_meta)
-				blueFix(6018, 6042, X, Y, LBL, Node_meta)
-				blueFix(6042, 6131, X, Y, LBL, Node_meta)
-				blueFix(6131, end, X, Y, LBL, Node_meta)
-			
-			# Hack : Ending long corridor
-			elif((end-st) > 75):
-				steps = np.linspace(st, end, 4).astype(int)
-				blueFix(st, steps[1], X, Y, LBL, Node_meta)
-				blueFix(steps[1], steps[2], X, Y, LBL, Node_meta)
-				blueFix(steps[2], end, X, Y, LBL, Node_meta)
-			else:
-				blueFix(st, end, X, Y, LBL, Node_meta)
+			blueFix(st, end, X, Y, LBL, Node_meta)
+
 		else:
 			# Node_meta.append((X[st], Y[st], X[end], Y[end], LBL[mid]))
 			Node_meta.append((X[st], Y[st], X[end], Y[end], LBL[mid], st, end))
@@ -281,12 +262,6 @@ def calcTheta(x1, x2, y1, y2):
 	return theta
 
 
-def getPositve(ang):
-	if(ang < 0):
-		ang += 360
-	return ang
-
-
 def manh(Node_meta, thetas):
 	Nodes = []; accTheta = 0; Thetas = []
 	line = Node_meta[0]
@@ -299,33 +274,21 @@ def manh(Node_meta, thetas):
 		x = [line[0], line[2]]; y = [line[1], line[3]]
 		leng = ((x[0]-x[1])**2 + (y[0]-y[1])**2)**(0.5)
 
-		curAng = getPositve(math.degrees(thetas[i])); prevAng = getPositve(math.degrees(thetas[i-1]))
-		delTheta = curAng - prevAng
+		delTheta = math.degrees(thetas[i]-thetas[i-1])
 
 		binTheta = 0
-		
-		if(line[4] == 1):
-			if((delTheta > 0 and delTheta < 45) or (delTheta > 315 and delTheta < 360) or (delTheta < 0 and delTheta > -45) or (delTheta < -315 and delTheta > -360)):
-				binTheta = 0
-			elif((delTheta > 55 and delTheta < 135) or (delTheta < -225 and delTheta > -315)):
-				binTheta = 90
-			elif((delTheta > 135 and delTheta < 225) or (delTheta < -135 and delTheta > -225)):
-				binTheta = 180
-			elif((delTheta > 225 and delTheta < 315) or (delTheta < -45 and delTheta > -135)):
-				binTheta = 270
-		else:
-			if((delTheta > 0 and delTheta < 45) or (delTheta > 315 and delTheta < 360) or (delTheta < 0 and delTheta > -45) or (delTheta < -315 and delTheta > -360)):
-				binTheta = 0
-			elif((delTheta > 45 and delTheta < 135) or (delTheta < -225 and delTheta > -315)):
-				binTheta = 90
-			elif((delTheta > 135 and delTheta < 225) or (delTheta < -135 and delTheta > -225)):
-				binTheta = 180
-			elif((delTheta > 225 and delTheta < 315) or (delTheta < -45 and delTheta > -135)):
-				binTheta = 270
+		if((delTheta > 0 and delTheta < 45) or (delTheta > 315 and delTheta < 360) or (delTheta < 0 and delTheta > -45) or (delTheta < -315 and delTheta > -360)):
+			binTheta = 0
+		elif((delTheta > 45 and delTheta < 135) or (delTheta < -225 and delTheta > -315)):
+			binTheta = 90
+		elif((delTheta > 135 and delTheta < 225) or (delTheta < -135 and delTheta > -225)):
+			binTheta = 180
+		elif((delTheta > 225 and delTheta < 315) or (delTheta < -45 and delTheta > -135)):
+			binTheta = 270
 		
 		accTheta += binTheta
 		Nodes.append((leng, accTheta, line[4], line[5], line[6]))
-		# print("Delta theta: ", delTheta, "Binned to: ", binTheta, "Total theta: ", accTheta, "Label: ", line[4], "Cur. Angle: ", curAng, "Pre. Angle: ", prevAng)
+		# print("Delta theta: ", delTheta, "Binned to: ", binTheta, "Total theta: ", accTheta, "Label: ", line[4], "Cur. Angle: ", math.degrees(thetas[i]), "Pre. Angle: ", math.degrees(thetas[i-1]))
 
 	return Nodes
 
@@ -338,44 +301,48 @@ def extManh(Nodes_manh):
 		mag = line[0]; theta = line[1]; lbl = line[2]; stPose = line[3]; endPose = line[4]
 		
 		if((theta - Nodes_manh[i-1][1] == 180) and (i != 0)):
-			# l1 = l2 - 0.2
-			l1 = l2 + 0.2
+			l1 = l2 - 0.2
 			b1 = b2 + 0.2
 			l2 = l1 + mag*math.cos(math.radians(theta))
 			b2 = b1 + mag*math.sin(math.radians(theta))
-			# if((lbl == 0) and (abs(b1-b2) < 0.25)):
-			# 	continue
+
+			if((lbl == 0) and (abs(b1-b2) < 0.25)):
+				continue
 			Nodes.append((l1, b1, l2, b2, lbl, stPose, endPose))
-			
+
 		else:
 			l1 = l2
 			b1 = b2
 			l2 = l1 + mag*math.cos(math.radians(theta))
 			b2 = b1 + mag*math.sin(math.radians(theta))
-
-			# if((lbl == 0) and (abs(b1-b2) < 0.25)):
-			# 	continue
-			Nodes.append((l1, b1, l2, b2, lbl, stPose, endPose))
 			
+			if((lbl == 0) and (abs(b1-b2) < 0.25)):
+				continue
+			Nodes.append((l1, b1, l2, b2, lbl, stPose, endPose))
+
 		i = i+1
 
 	return Nodes
 
 
 def writeMlp(Nodes, dense=True):
-	# Saving format: Rightward = b and Downwards = l
-
 	poses = open("mlp_in.txt", 'w')
+	densePoses = open("mlp_in_dense.txt", 'w')
 	for line in Nodes:
 		if(dense == True):
-			info = str(-line[1])+" "+str(line[0])+" "+ str(-line[3])+" "+ str(line[2])+" "+ str(line[4])+" "+str(line[5])+" "+str(line[6])
-		else:
-			# info = str(line[0])+" "+str(line[1])+" "+ str(line[2])+" "+ str(line[3])+" "+ str(line[4])
 			info = str(-line[1])+" "+str(line[0])+" "+ str(-line[3])+" "+ str(line[2])+" "+ str(line[4])
+			
+			infoDense = str(line[5])+" "+str(line[6])
+			densePoses.write(infoDense)
+			densePoses.write("\n")
+		else:
+			info = str(-line[1])+" "+str(line[0])+" "+ str(-line[3])+" "+ str(line[2])+" "+ str(line[4])
+		
 		poses.write(info)
 		poses.write("\n")
 
 	poses.close()
+	densePoses.close()
 
 
 if __name__ == '__main__':
@@ -383,9 +350,8 @@ if __name__ == '__main__':
 	(X, Y, THETA, LBL) = read(fileName)
 	
 	
-	# X = X[0:4490]; Y = Y[0:4490]; LBL = LBL[0:4490]
-	# X = X[5600:6000]; Y = Y[5600:6000]; LBL = LBL[5600:6000]
-	# X = X[4430:4900]; Y = Y[4430:4900]; LBL = LBL[4430:4900]
+	X = X[0:4490]; Y = Y[0:4490]; LBL = LBL[0:4490]
+	# X = X[4490:-1]; Y = Y[4490:-1]; LBL = LBL[4490:-1]
 	
 	print(len(X))
 	draw(X, Y, LBL)
@@ -410,4 +376,5 @@ if __name__ == '__main__':
 	Nodes = extManh(Nodes_manh)
 	drawManh(Nodes)
 
-	writeMlp(Nodes, dense=False)
+	writeMlp(Nodes, dense=True)
+	
