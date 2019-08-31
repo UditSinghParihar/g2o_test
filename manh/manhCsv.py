@@ -366,16 +366,22 @@ def writeMlp(Nodes, dense=True):
 	# Saving format: Rightward = b and Downwards = l
 
 	poses = open("mlp_in.txt", 'w')
+	densePoses = open("mlp_in_dense.txt", 'w')
 	for line in Nodes:
 		if(dense == True):
-			info = str(-line[1])+" "+str(line[0])+" "+ str(-line[3])+" "+ str(line[2])+" "+ str(line[4])+" "+str(line[5])+" "+str(line[6])
-		else:
-			# info = str(line[0])+" "+str(line[1])+" "+ str(line[2])+" "+ str(line[3])+" "+ str(line[4])
 			info = str(-line[1])+" "+str(line[0])+" "+ str(-line[3])+" "+ str(line[2])+" "+ str(line[4])
+			
+			infoDense = str(line[5])+" "+str(line[6])
+			densePoses.write(infoDense)
+			densePoses.write("\n")
+		else:
+			info = str(-line[1])+" "+str(line[0])+" "+ str(-line[3])+" "+ str(line[2])+" "+ str(line[4])
+		
 		poses.write(info)
 		poses.write("\n")
 
 	poses.close()
+	densePoses.close()
 
 
 if __name__ == '__main__':
@@ -410,4 +416,4 @@ if __name__ == '__main__':
 	Nodes = extManh(Nodes_manh)
 	drawManh(Nodes)
 
-	writeMlp(Nodes, dense=False)
+	writeMlp(Nodes, dense=True)
