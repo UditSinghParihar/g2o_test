@@ -1,5 +1,7 @@
+# Usage : python compareTraj.py opt_traj noisy_traj gt_traj
+
 import matplotlib.pyplot as plt
-from sys import argv
+from sys import argv, exit
 import csv
 import math
 
@@ -84,6 +86,7 @@ def readG2o(fileName):
 			THETA.append(float(theta.rstrip('\n')))
 
 	return (X, Y, THETA)
+	
 
 def readTxt(fileName):
 	f = open(fileName, 'r')
@@ -102,12 +105,33 @@ def readTxt(fileName):
 		THETA.append(float(theta))
 		LBL.append(float(lbl.rstrip('\n')))
 
-	X_temp = X
-	Y_temp = Y
-	X = [-y for y in Y_temp]
-	Y = [x for x in X_temp]
+	# X_temp = X
+	# Y_temp = Y
+	# X = [-y for y in Y_temp]
+	# Y = [x for x in X_temp]
 
 	return (X, Y, THETA, LBL)
+
+
+def readKitti(fileName):
+	f = open(fileName, 'r')
+	A = f.readlines()
+	f.close()
+
+	X = []
+	Y = []
+	THETA = []
+
+	for line in A:
+		l = line.split(' ')
+		
+		x = float(l[3]); y = float(l[7]); theta = math.atan2(float(l[4]), float(l[0]))
+		
+		X.append(x)
+		Y.append(y)
+		THETA.append(theta)
+
+	return (X, Y, THETA)	
 
 
 def draw(X1, Y1, X2, Y2, X3, Y3, noisy=True, opt=True ,gt=True):
@@ -125,15 +149,22 @@ def draw(X1, Y1, X2, Y2, X3, Y3, noisy=True, opt=True ,gt=True):
 
 
 if __name__ == '__main__':
-	fileG2o = str(argv[1])
-	fileCsv = str(argv[2])
-	fileTxt = str(argv[3])
+	fileOpt = str(argv[1])
+	fileNoise = str(argv[2])
+	fileGt = str(argv[3])
 	
-	(X1, Y1, THETA1) =	readG2o(fileG2o)
+	(X1, Y1, THETA1) =	readG2o(fileOpt)
+	# (X1, Y1, THETA1) = readKitti(fileOpt)	
 
-	(X2, Y2, THETA2, LBL) = readCsv(fileCsv)
+	(X2, Y2, THETA2, LBL) = readCsv(fileNoise)
+	# (X2, Y2, THETA2, LBL) = readTxt(fileNoise)
+	# (X2, Y2, THETA2) = readKitti(fileNoise)
 
-	(X3, Y3, THETA3, LBL) = readTxt(fileTxt)	
+	(X3, Y3, THETA3, LBL) = readTxt(fileGt)
+
+	# X1 = X1[0:2800]; Y1 = Y1[0:2800]
+	# X2 = X2[3100: 6000]; Y2 = Y2[3100: 6000]
+	# X3 = X3[3100: 6000]; Y3 = Y3[3100: 6000]
 
 	draw(X1, Y1, X2, Y2, X3, Y3, opt=False)
 	draw(X1, Y1, X2, Y2, X3, Y3, noisy=False, gt=False)

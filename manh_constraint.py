@@ -256,7 +256,7 @@ def calcTheta(x1, x2, y1, y2):
 
 
 def manh(Node_meta, thetas):
-	Nodes = []; accTheta = 270; Thetas = []
+	Nodes = []; accTheta = 0; Thetas = []
 	line = Node_meta[0]
 	x = [line[0], line[2]]; y = [line[1], line[3]]
 	leng = ((x[0]-x[1])**2 + (y[0]-y[1])**2)**(0.5)
@@ -327,7 +327,7 @@ if __name__ == '__main__':
 	fileName = str(argv[1])
 	(X, Y, THETA, LBL) = read(fileName)
 	
-	# X = X[0:3000]; Y = Y[0:3000]; LBL = LBL[0:3000]
+	X = X[0:3000]; Y = Y[0:3000]; LBL = LBL[0:3000]
 	# X = X[2950:3200]; Y = Y[2950:3200]; LBL = LBL[2950:3200]
 	print(len(X))
 	draw(X, Y, LBL)

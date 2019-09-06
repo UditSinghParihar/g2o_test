@@ -6,28 +6,28 @@ from scipy import stats
 import csv
 
 
-def readCsv(fileName):
-	X = []
-	Y = []
-	THETA = []
-	LBL = []
+# def readCsv(fileName):
+# 	X = []
+# 	Y = []
+# 	THETA = []
+# 	LBL = []
 
-	with open(fileName, 'rt') as f:
-		A = csv.reader(f)
+# 	with open(fileName, 'rt') as f:
+# 		A = csv.reader(f)
 
-		for idx, line in enumerate(A):
-			if(idx == 0):
-				continue
-			else:
-				X.append(float(line[1]))
-				Y.append(float(line[2]))
-				THETA.append(float(line[3]))
-				LBL.append(float(line[4]))
+# 		for idx, line in enumerate(A):
+# 			if(idx == 0):
+# 				continue
+# 			else:
+# 				X.append(float(line[1]))
+# 				Y.append(float(line[2]))
+# 				THETA.append(float(line[3]))
+# 				LBL.append(float(line[4]))
 
-	return (X, Y, THETA, LBL)
+# 	return (X, Y, THETA, LBL)
 
 
-def readTxt(fileName):
+def read(fileName):
 	f = open(fileName, 'r')
 	A = f.readlines()
 	f.close()
@@ -110,21 +110,8 @@ def meta(X, Y, LBL):
 		mid = st + (end - st)/2
 		
 		if (LBL[mid] == 1):
-			# Hack : Upper going corridor 
-			if(st > 5750 and end < 5948):
-				blueFix(st, 5850, X, Y, LBL, Node_meta)
-				blueFix(5850, 5861, X, Y, LBL, Node_meta)
-				blueFix(5861, end, X, Y, LBL, Node_meta)
-			
-			# Hack : Upper coming corridor
-			elif(st > 5976 and end < 6160):
-				blueFix(st, 6018, X, Y, LBL, Node_meta)
-				blueFix(6018, 6042, X, Y, LBL, Node_meta)
-				blueFix(6042, 6131, X, Y, LBL, Node_meta)
-				blueFix(6131, end, X, Y, LBL, Node_meta)
-			
 			# Hack : Ending long corridor
-			elif((end-st) > 75):
+			if((end-st) > 75):
 				steps = np.linspace(st, end, 4).astype(int)
 				blueFix(st, steps[1], X, Y, LBL, Node_meta)
 				blueFix(steps[1], steps[2], X, Y, LBL, Node_meta)
@@ -307,7 +294,7 @@ def getPositve(ang):
 
 
 def manh(Node_meta, thetas):
-	Nodes = []; accTheta = 0; Thetas = []
+	Nodes = []; accTheta = 90; Thetas = []
 	line = Node_meta[0]
 	x = [line[0], line[2]]; y = [line[1], line[3]]
 	leng = ((x[0]-x[1])**2 + (y[0]-y[1])**2)**(0.5)
@@ -357,13 +344,11 @@ def extManh(Nodes_manh):
 		mag = line[0]; theta = line[1]; lbl = line[2]; stPose = line[3]; endPose = line[4]
 		
 		if((theta - Nodes_manh[i-1][1] == 180) and (i != 0)):
-			# l1 = l2 - 0.2
-			l1 = l2 + 0.2
+			l1 = l2 - 0.2
+			# l1 = l2 + 0.2
 			b1 = b2 + 0.2
 			l2 = l1 + mag*math.cos(math.radians(theta))
 			b2 = b1 + mag*math.sin(math.radians(theta))
-			# if((lbl == 0) and (abs(b1-b2) < 0.25)):
-			# 	continue
 			Nodes.append((l1, b1, l2, b2, lbl, stPose, endPose))
 			
 		else:
@@ -403,17 +388,46 @@ def writeMlp(Nodes, dense=True):
 	densePoses.close()
 
 
-if __name__ == '__main__':
-	fileName = str(argv[1])
-	# (X, Y, THETA, LBL) = readCsv(fileName)
-	(X, Y, THETA, LBL) = readTxt(fileName)
+def getConstr(Nodes_manh, Nodes):
+	poses = []
 	
-	# X = X[0:3000]; Y = Y[0:3000]; LBL = LBL[0:3000]
-	# X = X[3100: 6000]; Y = Y[3100: 6000]; LBL = LBL[3100: 6000]
+	for i in range(len(Nodes_manh)):
+		theta = Nodes_manh[i][1]
+		l1 = Nodes[i][0]; b1 = Nodes[i][1]; l2 = Nodes[i][2]; b2 = Nodes[i][3]
+		stId = Nodes[i][5]; endId = Nodes[i][6]
+
+		poses.append((l1, b1, math.radians(theta), stId+1))
+		poses.append((l2, b2, math.radians(theta), endId-1))
+
+	return poses
+
+
+def drawConstr(poses):
+	poses = np.asarray(poses)
+	
+	ax = plt.subplot(111)
+
+	for i in range(len(poses)):
+		x = poses[i, 0]; y = poses[i, 1]; theta = poses[i, 2]
+
+		x2 = math.cos(theta) + x
+		y2 = math.sin(theta) + y
+		plt.plot([x, x2], [y, y2], 'm->')
+
+	ax.plot(poses[:, 0], poses[:, 1], 'ro')
+	plt.plot(poses[:, 0], poses[:, 1], 'k-')
+
+	plt.show()
+
+
+def start(fileName):
+	(X, Y, THETA, LBL) = read(fileName)
+	
+	X = X[3100: 6000]; Y = Y[3100: 6000]; LBL = LBL[3100: 6000]; THETA = THETA[3100: 6000]
 	# X = X[3100: -1]; Y = Y[3100: -1]; LBL = LBL[3100: -1]
 	
 	print(len(X))
-	draw(X, Y, LBL)
+	# draw(X, Y, LBL)
 
 	Node_meta = meta(X, Y, LBL)
 	Node_meta = outRemove(Node_meta)
@@ -436,3 +450,15 @@ if __name__ == '__main__':
 	drawManh(Nodes)
 
 	writeMlp(Nodes, dense=True)
+
+	poses = getConstr(Nodes_manh, Nodes)
+	# print(poses[0])
+	# drawConstr(poses)
+
+	return poses
+
+
+if __name__ == '__main__':
+	fileName = str(argv[1])
+	
+	poses = start(fileName)

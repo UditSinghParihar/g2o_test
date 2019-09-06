@@ -25,6 +25,12 @@ def read(fileName):
 	return (X, Y, THETA, LBL)
 
 
+def getPositve(ang):
+	if(ang < 0):
+		ang += 360
+	return ang
+
+
 def blueFix(st, end, X, Y, LBL, Node_meta):
 	mid = st + (end - st)/2
 
@@ -44,8 +50,8 @@ def blueFix(st, end, X, Y, LBL, Node_meta):
 
 			if((delTheta > 70 and delTheta < 110) or (delTheta > -110 and delTheta < -70)):
 				xMid = X2[0]; yMid = Y2[0]
-				Node_meta.append((X[st], Y[st], xMid, yMid, LBL[mid], st, end))
-				Node_meta.append((xMid, yMid, X[end], Y[end], LBL[mid], st, end))
+				Node_meta.append((X[st], Y[st], xMid, yMid, LBL[mid], st, i+8))
+				Node_meta.append((xMid, yMid, X[end], Y[end], LBL[mid], i+8, end))
 				fill = False
 
 			# x1s = X1[0]; x1e = X1[-1] 
@@ -268,7 +274,7 @@ def manh(Node_meta, thetas):
 	x = [line[0], line[2]]; y = [line[1], line[3]]
 	leng = ((x[0]-x[1])**2 + (y[0]-y[1])**2)**(0.5)
 
-	Nodes.append((leng, accTheta, line[4]))
+	Nodes.append((leng, accTheta, line[4], line[5], line[6]))
 	# print("Total theta: ", accTheta, "Length: ", leng)
 
 	for i in xrange(1, len(Node_meta)):
@@ -302,7 +308,7 @@ def manh(Node_meta, thetas):
 				binTheta = 270
 
 		accTheta += binTheta
-		Nodes.append((leng, accTheta, line[4]))
+		Nodes.append((leng, accTheta, line[4], line[5], line[6]))
 		# print("Delta theta: ", delTheta, "Binned to: ", binTheta, "Total theta: ", accTheta, "Length: ", leng, "Label: ", line[4], "Cur. Angle: ", curAng, "Pre. Angle: ", prevAng)
 
 	return Nodes
@@ -313,14 +319,14 @@ def extManh(Nodes_manh):
 
 	l1 = 0; b1 = 0; l2 = 0; b2 = 0
 	for line in Nodes_manh:
-		mag = line[0]; theta = line[1]; lbl = line[2]
+		mag = line[0]; theta = line[1]; lbl = line[2]; stPose = line[3]; endPose = line[4]
 		
 		if((theta - Nodes_manh[i-1][1] == 180) and (i != 0)):
 			l1 = l2 - 0.1
 			b1 = b2 + 0.1
 			l2 = l1 + mag*math.cos(math.radians(theta))
 			b2 = b1 + mag*math.sin(math.radians(theta))
-			Nodes.append((l1, b1, l2, b2, lbl))
+			Nodes.append((l1, b1, l2, b2, lbl, stPose, endPose))
 
 		else:
 			l1 = l2
@@ -328,7 +334,7 @@ def extManh(Nodes_manh):
 			l2 = l1 + mag*math.cos(math.radians(theta))
 			b2 = b1 + mag*math.sin(math.radians(theta))
 
-			Nodes.append((l1, b1, l2, b2, lbl))
+			Nodes.append((l1, b1, l2, b2, lbl, stPose, endPose))
 
 		i = i+1
 
@@ -336,36 +342,68 @@ def extManh(Nodes_manh):
 
 
 def writeMlp(Nodes, dense=True):
-	poses = open("mlp_in2.txt", 'w')
+	poses = open("mlp_in.txt", 'w')
+	densePoses = open("mlp_in_dense.txt", 'w')
+
 	for line in Nodes:
+		# if(dense == True):
+		# 	info = str(line[0])+" "+str(line[1])+" "+ str(line[2])+" "+ str(line[3])+" "+ str(line[4])+" "+str(line[5])+" "+str(line[6])
+		# else:
+		# 	info = str(line[0])+" "+str(line[1])+" "+ str(line[2])+" "+ str(line[3])+" "+ str(line[4])
+
 		if(dense == True):
-			info = str(line[0])+" "+str(line[1])+" "+ str(line[2])+" "+ str(line[3])+" "+ str(line[4])+" "+str(line[5])+" "+str(line[6])
+			info = str(-line[1])+" "+str(line[0])+" "+ str(-line[3])+" "+ str(line[2])+" "+ str(line[4])
+			
+			infoDense = str(line[5])+" "+str(line[6])
+			densePoses.write(infoDense)
+			densePoses.write("\n")
 		else:
-			info = str(line[0])+" "+str(line[1])+" "+ str(line[2])+" "+ str(line[3])+" "+ str(line[4])
+			info = str(-line[1])+" "+str(line[0])+" "+ str(-line[3])+" "+ str(line[2])+" "+ str(line[4])
+		
 		poses.write(info)
 		poses.write("\n")
 
 	poses.close()
+	densePoses.close()
 
 
 def getConstr(Nodes_manh, Nodes):
 	poses = []
-
-	for i in range(len(Nodes_manh)):	
+	
+	for i in range(len(Nodes_manh)):
 		theta = Nodes_manh[i][1]
 		l1 = Nodes[i][0]; b1 = Nodes[i][1]; l2 = Nodes[i][2]; b2 = Nodes[i][3]
+		stId = Nodes[i][5]; endId = Nodes[i][6]
 
-		poses.append((l1, b1, theta))
-		poses.append((l2, b2, theta))
+		poses.append((l1, b1, math.radians(theta), stId+1))
+		poses.append((l2, b2, math.radians(theta), endId-1))
+
+	return poses
 
 
+def drawConstr(poses):
+	poses = np.asarray(poses)
+	
+	ax = plt.subplot(111)
 
-if __name__ == '__main__':
-	fileName = str(argv[1])
+	for i in range(len(poses)):
+		x = poses[i, 0]; y = poses[i, 1]; theta = poses[i, 2]
+
+		x2 = math.cos(theta) + x
+		y2 = math.sin(theta) + y
+		plt.plot([x, x2], [y, y2], 'm->')
+
+	ax.plot(poses[:, 0], poses[:, 1], 'ro')
+	plt.plot(poses[:, 0], poses[:, 1], 'k-')
+
+	plt.show()
+
+
+def start(fileName):
 	(X, Y, THETA, LBL) = read(fileName)
 	
 	# X = X[0:1500]; Y = Y[0:1500]; LBL = LBL[0:1500]
-	print(len(X))
+	# print(len(X))
 	# draw(X, Y, LBL)
 
 	Node_meta = meta(X, Y, LBL)
@@ -385,9 +423,18 @@ if __name__ == '__main__':
 	# drawTheta(Node_meta, thetas)
 	
 	Nodes_manh = manh(Node_meta, thetas)
+	
 	Nodes = extManh(Nodes_manh)
-	# drawManh(Nodes)
+	drawManh(Nodes)
 
-	writeMlp(Nodes, False)
+	writeMlp(Nodes, True)
 
-	getConstr(Nodes_manh, Nodes)
+	poses = getConstr(Nodes_manh, Nodes)
+	# drawConstr(poses)
+
+	return poses
+
+if __name__ == '__main__':
+	fileName = str(argv[1])
+
+	poses = start(fileName)

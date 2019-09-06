@@ -1,89 +1,29 @@
-# Usage : python fast/fastG2o2.py unoptimised_tracks.csv
-# Output : lessNoise.g2o file in current directory
-
 from sys import argv, exit
 import matplotlib.pyplot as plt
 import math
 import numpy as np
-import csv
 
-
-def getTheta(X ,Y):
-	THETA = [None]*len(X)
-	for i in range(1, len(X)-1):
-		if(X[i+1] == X[i-1]):
-			if (Y[i+1]>Y[i-1]):
-				THETA[i] = math.pi/2
-			else:
-				THETA[i] = 3*math.pi/2
-			continue
-
-		THETA[i] = math.atan((Y[i+1]-Y[i-1])/(X[i+1]-X[i-1]))
-
-		if(X[i+1]-X[i-1] < 0):
-			THETA[i] += math.pi
-
-	if X[1]==X[0]:
-		if Y[1] > Y[0]:
-			THETA[0] = math.pi/2
-		else:
-			THETA[0] = 3*math.pi/2
-	else:
-		THETA[0] = math.atan((Y[1]-Y[0])/(X[1]-X[0]))
-
-	if X[-1] == X[len(Y)-2]:
-		if Y[1] > Y[0]:
-			THETA[-1] = math.pi/2
-		else:
-			THETA[-1] = 3*math.pi/2
-	else:
-		THETA[-1] = math.atan((Y[-1]-Y[len(Y)-2])/(X[-1]-X[len(Y)-2]))
-
-	return THETA
+import manh_constraint5 as const
 
 
 def read(fileName):
+	f = open(fileName, 'r')
+	A = f.readlines()
+	f.close()
+
 	X = []
 	Y = []
 	THETA = []
 	LBL = []
 
-	with open(fileName, 'rt') as f:
-		A = csv.reader(f)
-
-
-		for idx, line in enumerate(A):
-			if(idx == 0):
-				continue
-			else:
-				X.append(float(line[1]))
-				Y.append(float(line[2]))
-				# THETA.append(float(line[3]))
-				LBL.append(float(line[4]))
-
-	X_temp = X
-	Y_temp = Y
-	X = [-y for y in Y_temp]
-	Y = [x for x in X_temp]
-
-	THETA = getTheta(X, Y)
+	for line in A:
+		(x, y, theta, lbl) = line.split(' ')
+		X.append(float(x))
+		Y.append(float(y))
+		THETA.append(float(theta))
+		LBL.append(int(lbl.rstrip('\n')))
 
 	return (X, Y, THETA, LBL)
-
-
-def calcTheta(x1, x2, y1, y2):
-	if(x2 == x1):
-		if(y2 > y1):
-			theta = math.pi/2
-		else:
-			theta = 3*math.pi/2
-	else:
-		theta = math.atan((y2-y1)/(x2-x1))
-
-	if(x2-x1 < 0):
-		theta += math.pi
-
-	return theta	
 
 
 def drawTheta(X, Y, LBL, thetas):
@@ -122,42 +62,40 @@ def drawTheta(X, Y, LBL, thetas):
 
 	plt.show()
 
-fig = plt.figure()
-ax = plt.subplot(111)
-
-def on_plot_hover(event):
-	for pt in ax.get_lines():
-		if pt.contains(event)[0]:
-			print("over %s" % pt.get_gid())
-			
 
 def draw(X, Y, LBL):
-	for i in range(len(LBL)):
-		x = X[i]; y = Y[i]
+	X0 = []; Y0 = []; X1 = []; Y1 = []; X2 = []; Y2 =[]; X3 = []; Y3 = [];
+	
+	for i in xrange(len(LBL)):
 		if LBL[i] == 0:
-			ax.plot(x, y, 'ro', gid=i, zorder = 2, markersize=5)
+			X0.append(X[i])
+			Y0.append(Y[i])
 
 		elif LBL[i] == 1:
-			ax.plot(x, y, 'bo', gid=i, zorder = 4, markersize=5)
+			X1.append(X[i])
+			Y1.append(Y[i])
 
 		elif LBL[i] == 2:
-			ax.plot(x, y, 'go', gid=i, zorder = 6, markersize=5)
+			X2.append(X[i])
+			Y2.append(Y[i])
 
 		elif LBL[i] == 3:
-			ax.plot(x, y, 'yo', gid=i, zorder = 8, markersize=5)
+			X3.append(X[i])
+			Y3.append(Y[i])
 
+	fig = plt.figure()
+	ax = plt.subplot(111)
 
+	ax.plot(X0, Y0, 'ro', label='Rackspace')
+	ax.plot(X1, Y1, 'bo', label='Corridor')
+	ax.plot(X2, Y2, 'go', label='Trisection')
+	ax.plot(X3, Y3, 'yo', label='Intersection')
 	plt.plot(X, Y, 'k-')
-
-	fig.canvas.mpl_connect('motion_notify_event', on_plot_hover)
 
 	plt.show()
 
 
-def writeG2O(X_meta,Y_meta,THETA_meta):
-	sz = int(len(X_meta))
-	X_meta = X_meta[0:sz]; Y_meta = Y_meta[0:sz]; THETA_meta = THETA_meta[0:sz]
-
+def writeG2O(X_meta, Y_meta, THETA_meta, poses):
 	g2o = open('/run/user/1000/gvfs/sftp:host=ada.iiit.ac.in,user=udit/home/udit/share/lessNoise.g2o', 'w')
 	
 	for i, (x, y, theta) in enumerate(zip(X_meta,Y_meta,THETA_meta)):
@@ -183,9 +121,28 @@ def writeG2O(X_meta,Y_meta,THETA_meta):
 		g2o.write(line)
 		g2o.write("\n")
 
-	# Section I
-	
+	# Manhattan constraints
+	g2o.write("# Manhattan constraints")
+	g2o.write("\n")
+	info_mat = "300.0 0.0 0.0 300.0 0.0 700.0"
 
+	for i in range(1, len(poses)):
+		p1 = (poses[0, 0], poses[0, 1], poses[0, 2])
+		p2 = (poses[i, 0], poses[i, 1], poses[i, 2])
+		startId = int(poses[0, 3]); denseId = int(poses[i, 3])
+
+		T1_w = np.array([[math.cos(p1[2]), -math.sin(p1[2]), p1[0]], [math.sin(p1[2]), math.cos(p1[2]), p1[1]], [0, 0, 1]])
+		T2_w = np.array([[math.cos(p2[2]), -math.sin(p2[2]), p2[0]], [math.sin(p2[2]), math.cos(p2[2]), p2[1]], [0, 0, 1]])
+		T2_1 = np.dot(np.linalg.inv(T1_w), T2_w)
+		del_x = str(T2_1[0][2])
+		del_y = str(T2_1[1][2])
+		del_theta = str(math.atan2(T2_1[1, 0], T2_1[0, 0]))
+		
+		line = "EDGE_SE2 "+str(startId)+" "+str(denseId)+" "+del_x+" "+del_y+" "+del_theta+" "+info_mat
+		g2o.write(line)
+		g2o.write("\n")
+
+	
 	g2o.write("FIX 0")
 	g2o.write("\n")
 	g2o.close()
@@ -194,9 +151,13 @@ def writeG2O(X_meta,Y_meta,THETA_meta):
 if __name__ == '__main__':
 	fileName = str(argv[1])
 	(X, Y, THETA, LBL) = read(fileName)
-	print(len(X))
-	draw(X, Y, LBL)
+	X = X[3100: 6000]; Y = Y[3100: 6000]; LBL = LBL[3100: 6000]; THETA = THETA[3100: 6000]
+	# X = X[50:2800]; Y = Y[50:2800]; LBL = LBL[50:2800]
 
+	draw(X, Y, LBL)
 	# drawTheta(X, Y, LBL, THETA)
 
-	writeG2O(X, Y, THETA)
+	poses = np.asarray(const.start(fileName))
+	# print(poses.shape, poses[0, :])
+
+	writeG2O(X, Y, THETA, poses)

@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import math
 import numpy as np
 
-import manh_constraint3 as const
+import manh_constraint4 as const
 
 
 def read(fileName):
@@ -142,6 +142,25 @@ def writeG2O(X_meta, Y_meta, THETA_meta, poses):
 		g2o.write(line)
 		g2o.write("\n")
 
+	# Rotation constraints
+	# g2o.write("# Rotation constraints")
+	# g2o.write("\n")
+	# info_mat = "1000.0 0.0 0.0 1000.0 0.0 1000.0"
+
+	# for i in range(1, 70):
+	# 	p1 = (X_meta[0], Y_meta[0], THETA_meta[0])
+	# 	p2 = (X_meta[i], Y_meta[i], THETA_meta[i])
+	# 	T1_w = np.array([[math.cos(p1[2]), -math.sin(p1[2]), p1[0]], [math.sin(p1[2]), math.cos(p1[2]), p1[1]], [0, 0, 1]])
+	# 	T2_w = np.array([[math.cos(p2[2]), -math.sin(p2[2]), p2[0]], [math.sin(p2[2]), math.cos(p2[2]), p2[1]], [0, 0, 1]])
+	# 	T2_1 = np.dot(np.linalg.inv(T1_w), T2_w)
+	# 	del_x = str(T2_1[0][2])
+	# 	del_y = str(T2_1[1][2])
+	# 	del_theta = str(math.atan2(T2_1[1, 0], T2_1[0, 0]))
+		
+	# 	line = "EDGE_SE2 "+str(0)+" "+str(i)+" "+del_x+" "+del_y+" "+del_theta+" "+info_mat
+	# 	g2o.write(line)
+	# 	g2o.write("\n")
+
 	g2o.write("FIX 0")
 	g2o.write("\n")
 	g2o.close()
@@ -150,6 +169,8 @@ def writeG2O(X_meta, Y_meta, THETA_meta, poses):
 if __name__ == '__main__':
 	fileName = str(argv[1])
 	(X, Y, THETA, LBL) = read(fileName)
+	X = X[0:2800]; Y = Y[0:2800]; LBL = LBL[0:2800]
+	# X = X[50:2800]; Y = Y[50:2800]; LBL = LBL[50:2800]
 
 	draw(X, Y, LBL)
 	# drawTheta(X, Y, LBL, THETA)

@@ -51,7 +51,6 @@ def read(fileName):
 	with open(fileName, 'rt') as f:
 		A = csv.reader(f)
 
-
 		for idx, line in enumerate(A):
 			if(idx == 0):
 				continue
@@ -71,19 +70,19 @@ def read(fileName):
 	return (X, Y, THETA, LBL)
 
 
-def calcTheta(x1, x2, y1, y2):
-	if(x2 == x1):
-		if(y2 > y1):
-			theta = math.pi/2
-		else:
-			theta = 3*math.pi/2
-	else:
-		theta = math.atan((y2-y1)/(x2-x1))
+# def calcTheta(x1, x2, y1, y2):
+# 	if(x2 == x1):
+# 		if(y2 > y1):
+# 			theta = math.pi/2
+# 		else:
+# 			theta = 3*math.pi/2
+# 	else:
+# 		theta = math.atan((y2-y1)/(x2-x1))
 
-	if(x2-x1 < 0):
-		theta += math.pi
+# 	if(x2-x1 < 0):
+# 		theta += math.pi
 
-	return theta	
+# 	return theta	
 
 
 def drawTheta(X, Y, LBL, thetas):
@@ -155,8 +154,8 @@ def draw(X, Y, LBL):
 
 
 def writeG2O(X_meta,Y_meta,THETA_meta):
-	sz = int(len(X_meta))
-	X_meta = X_meta[0:sz]; Y_meta = Y_meta[0:sz]; THETA_meta = THETA_meta[0:sz]
+	# sz = int(len(X_meta))
+	# X_meta = X_meta[0:sz]; Y_meta = Y_meta[0:sz]; THETA_meta = THETA_meta[0:sz]
 
 	g2o = open('/run/user/1000/gvfs/sftp:host=ada.iiit.ac.in,user=udit/home/udit/share/lessNoise.g2o', 'w')
 	
@@ -297,7 +296,7 @@ if __name__ == '__main__':
 	fileName = str(argv[1])
 	(X, Y, THETA, LBL) = read(fileName)
 	print(len(X))
-	draw(X, Y, LBL)
+	# draw(X, Y, LBL)
 
 	# drawTheta(X, Y, LBL, THETA)
 
