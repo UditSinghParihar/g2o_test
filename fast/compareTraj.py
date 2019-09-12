@@ -49,7 +49,6 @@ def readCsv(fileName):
 	with open(fileName, 'rt') as f:
 		A = csv.reader(f)
 
-
 		for idx, line in enumerate(A):
 			if(idx == 0):
 				continue
@@ -153,18 +152,19 @@ if __name__ == '__main__':
 	fileNoise = str(argv[2])
 	fileGt = str(argv[3])
 	
-	(X1, Y1, THETA1) =	readG2o(fileOpt)
-	# (X1, Y1, THETA1) = readKitti(fileOpt)	
+	# (X1, Y1, THETA1) =	readG2o(fileOpt)
+	(X1, Y1, THETA1) = readKitti(fileOpt)	
 
-	(X2, Y2, THETA2, LBL) = readCsv(fileNoise)
+	# (X2, Y2, THETA2, LBL) = readCsv(fileNoise)
 	# (X2, Y2, THETA2, LBL) = readTxt(fileNoise)
-	# (X2, Y2, THETA2) = readKitti(fileNoise)
+	(X2, Y2, THETA2) = readKitti(fileNoise)
 
-	(X3, Y3, THETA3, LBL) = readTxt(fileGt)
+	# (X3, Y3, THETA3, LBL) = readTxt(fileGt)
+	(X3, Y3, THETA3) = readKitti(fileGt)
 
 	# X1 = X1[0:2800]; Y1 = Y1[0:2800]
-	# X2 = X2[3100: 6000]; Y2 = Y2[3100: 6000]
-	# X3 = X3[3100: 6000]; Y3 = Y3[3100: 6000]
+	# X2 = X2[0:2800]; Y2 = Y2[0:2800]
+	# X3 = X3[0:2800]; Y3 = Y3[0:2800]
 
 	draw(X1, Y1, X2, Y2, X3, Y3, opt=False)
 	draw(X1, Y1, X2, Y2, X3, Y3, noisy=False, gt=False)

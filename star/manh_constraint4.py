@@ -406,11 +406,11 @@ def start(fileName):
 	# X = X[2900: -1]; Y = Y[2900: -1]; LBL = LBL[2900: -1]
 
 	print(len(X))
-	# draw(X, Y, LBL)
+	draw(X, Y, LBL)
 
 	Node_meta = meta(X, Y, LBL)
 	Node_meta = outRemove(Node_meta)
-	# drawMeta(Node_meta)
+	drawMeta(Node_meta)
 
 	Nodes = []
 

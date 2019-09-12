@@ -434,6 +434,43 @@ def start(fileName):
 
 	return poses
 
+
+# def startPoses(X, Y, THETA, LBL):
+# 	# (X, Y, THETA, LBL) = read(fileName)
+	
+# 	# X = X[0:1500]; Y = Y[0:1500]; LBL = LBL[0:1500]
+# 	# print(len(X))
+# 	# draw(X, Y, LBL)
+
+# 	Node_meta = meta(X, Y, LBL)
+# 	Node_meta = outRemove(Node_meta)
+# 	# drawMeta(Node_meta)
+
+# 	Nodes = []
+
+# 	thetas = []
+# 	for line in Node_meta:
+# 		lbl = line[4]
+# 		x = [line[0], line[2]]
+# 		y = [line[1], line[3]]
+
+# 		theta = calcTheta(x[0], x[1], y[0], y[1])
+# 		thetas.append(theta)
+# 	drawTheta(Node_meta, thetas)
+	
+# 	Nodes_manh = manh(Node_meta, thetas)
+	
+# 	Nodes = extManh(Nodes_manh)
+# 	drawManh(Nodes)
+
+# 	writeMlp(Nodes, True)
+
+# 	poses = getConstr(Nodes_manh, Nodes)
+# 	# drawConstr(poses)
+
+# 	return poses
+
+
 if __name__ == '__main__':
 	fileName = str(argv[1])
 

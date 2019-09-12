@@ -44,7 +44,7 @@ def readG2o(fileName):
 
 def convert(X, Y, THETA):
 	A = np.zeros((len(X), 12))
-	
+
 	for i in range(len(X)):
 		T = np.identity(4)
 		T[0, 3] = X[i]
@@ -58,12 +58,12 @@ def convert(X, Y, THETA):
 
 
 if __name__ == '__main__':
-	# (X, Y, THETA) = readG2o(argv[1])
+	(X, Y, THETA) = readG2o(argv[1])
 
-	(X, Y, THETA) = readTxt(argv[1])
+	# (X, Y, THETA) = readTxt(argv[1])
 	# X = X[0:2800]; Y = Y[0:2800]; THETA = THETA[0:2800]
-	X = X[3100: 6000]; Y = Y[3100: 6000]; THETA = THETA[3100: 6000]
+	# X = X[3100: 6000]; Y = Y[3100: 6000]; THETA = THETA[3100: 6000]
 
 	A = convert(X, Y, THETA)
 
-	np.savetxt("noise.kitti", A, delimiter=' ')
+	np.savetxt("loop_star1.kitti", A, delimiter=' ')
