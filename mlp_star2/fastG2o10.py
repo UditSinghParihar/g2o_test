@@ -221,6 +221,6 @@ if __name__ == '__main__':
 	# print(poses.shape, poses[0, :])
 
 	mlpN = readCsv(str(argv[2]))
-	# print(mlpN, len(mlpN))
+	print(len(mlpN))
 
 	writeG2O(X, Y, THETA, poses, mlpN, iPoses, icpId)

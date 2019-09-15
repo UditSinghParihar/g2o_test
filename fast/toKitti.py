@@ -66,4 +66,4 @@ if __name__ == '__main__':
 
 	A = convert(X, Y, THETA)
 
-	np.savetxt("loop_star1.kitti", A, delimiter=' ')
+	np.savetxt("loop_d22.kitti", A, delimiter=' ')

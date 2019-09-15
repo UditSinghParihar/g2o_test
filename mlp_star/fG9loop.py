@@ -4,8 +4,8 @@ import math
 import numpy as np
 import csv
 
-import manh_constraint9 as const
-from icpData import icpPoses as iPoses
+import mC9loop as const
+from icpDense import icpPoses as iPoses
 
 
 def read(fileName):
@@ -131,36 +131,15 @@ def writeG2O(X_meta, Y_meta, THETA_meta, poses, mlpN, iPoses, icpId):
 		del_y = str(T2_1[1][2])
 		del_theta = str(math.atan2(T2_1[1, 0], T2_1[0, 0]))
 		
-		line = "EDGE_SE2 "+str(i-1)+" "+str(i)+" "+del_x+" "+del_y+" "+del_theta+" "+info_mat
+		line = "EDGE_SE2 "+str(i-1)+" "+str(i)+" "+del_x+" "+del_y+" "+del_theta+" "+info_mat+"\n"
 		g2o.write(line)
-		g2o.write("\n")
+		# g2o.write("\n")
 
-	# Manhattan constraints
-	# g2o.write("# Manhattan constraints")
-	# g2o.write("\n")
-	# info_mat = "300.0 0.0 0.0 300.0 0.0 700.0"
-
-	# for i in range(1, len(poses)):
-	# 	p1 = (poses[0, 0], poses[0, 1], poses[0, 2])
-	# 	p2 = (poses[i, 0], poses[i, 1], poses[i, 2])
-	# 	startId = int(poses[0, 3]); denseId = int(poses[i, 3])
-
-	# 	T1_w = np.array([[math.cos(p1[2]), -math.sin(p1[2]), p1[0]], [math.sin(p1[2]), math.cos(p1[2]), p1[1]], [0, 0, 1]])
-	# 	T2_w = np.array([[math.cos(p2[2]), -math.sin(p2[2]), p2[0]], [math.sin(p2[2]), math.cos(p2[2]), p2[1]], [0, 0, 1]])
-	# 	T2_1 = np.dot(np.linalg.inv(T1_w), T2_w)
-	# 	del_x = str(T2_1[0][2])
-	# 	del_y = str(T2_1[1][2])
-	# 	del_theta = str(math.atan2(T2_1[1, 0], T2_1[0, 0]))
-		
-	# 	line = "EDGE_SE2 "+str(startId)+" "+str(denseId)+" "+del_x+" "+del_y+" "+del_theta+" "+info_mat
-	# 	g2o.write(line)
-	# 	g2o.write("\n")
 
 	# MLP Manhattan constraints
 	g2o.write("\n# MLP Manhattan constraints\n\n")
-	# g2o.write("\n")
 	info_mat = "300.0 0.0 0.0 300.0 0.0 700.0"
-	for i in range(len(mlpN)):
+	for i in range(0, len(mlpN), 3):
 		n1 = mlpN[i][1]; n2 = mlpN[i][0]
 		s1 = 2*n1; s2 = s1+1; t1 = 2*n2; t2 = t1+1  
 		
@@ -180,7 +159,7 @@ def writeG2O(X_meta, Y_meta, THETA_meta, poses, mlpN, iPoses, icpId):
 			del_x = str(T2_1[0][2])
 			del_y = str(T2_1[1][2])
 			del_theta = str(math.atan2(T2_1[1, 0], T2_1[0, 0]))
-			
+	
 			line = "EDGE_SE2 "+str(startId)+" "+str(denseId)+" "+del_x+" "+del_y+" "+del_theta+" "+info_mat+"\n"
 			g2o.write(line)
 			# g2o.write("\n")
@@ -201,7 +180,6 @@ def writeG2O(X_meta, Y_meta, THETA_meta, poses, mlpN, iPoses, icpId):
 		g2o.write("\n")
 
 	g2o.write("FIX 0\n")
-	# g2o.write("\n")
 	g2o.close()
 
 
@@ -221,4 +199,5 @@ if __name__ == '__main__':
 	mlpN = readCsv(str(argv[2]))
 	# print(mlpN, len(mlpN))
 
+	# print(icpId.shape, iPoses.shape)
 	writeG2O(X, Y, THETA, poses, mlpN, iPoses, icpId)

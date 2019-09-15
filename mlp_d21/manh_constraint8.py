@@ -322,8 +322,10 @@ def extManh(Nodes_manh):
 		mag = line[0]; theta = line[1]; lbl = line[2]; stPose = line[3]; endPose = line[4]
 		
 		if((theta - Nodes_manh[i-1][1] == 180) and (i != 0)):
-			l1 = l2 - 0.1
-			b1 = b2 + 0.1
+			# l1 = l2 - 0.1
+			# b1 = b2 + 0.1
+			l1 = l2
+			b1 = b2
 			l2 = l1 + mag*math.cos(math.radians(theta))
 			b2 = b1 + mag*math.sin(math.radians(theta))
 			Nodes.append((l1, b1, l2, b2, lbl, stPose, endPose))
@@ -438,6 +440,56 @@ def drawConstr(poses):
 	plt.show()
 
 
+# Generates dense icp pairs on MLP's proposed nodes
+def denseIcp(mlpN, Nodes, Nodes_manh):
+	icpId = []
+	for (n2, n1) in mlpN:
+		info1 = Nodes[n1]; st1 = info1[5]+1; end1 = info1[6]-1; theta1 = math.radians(Nodes_manh[n1][1]); num1 = end1-st1
+		info2 = Nodes[n2]; st2 = info2[5]+1; end2 = info2[6]-1; theta2 = math.radians(Nodes_manh[n2][1]); num2 = end2-st2
+
+		a = np.array([math.cos(theta1), math.sin(theta1)]).reshape(2, 1)
+		b = np.array([math.cos(theta2), math.sin(theta2)]).reshape(2, 1)
+
+		if(np.dot(a.T, b) == 1):
+			# print(st1, end1, st2, end2)
+			if(num1>num2):
+				if(num2>5):
+					p1 = np.linspace(st1, end1, 5)
+					p2 = np.linspace(st2, end2, 5)
+					for i in range(p1.shape[0]):
+						icpId.append((p1[i], p2[i]))
+				else:
+					p1 = np.linspace(st1, end1, num2)
+					p2 = np.linspace(st2, end2, num2)
+					for i in range(p1.shape[0]):
+						icpId.append((p1[i], p2[i]))
+			else:
+				if(num1>5):
+					p1 = np.linspace(st1, end1, 5)
+					p2 = np.linspace(st2, end2, 5)
+					for i in range(p1.shape[0]):
+						icpId.append((p1[i], p2[i]))
+				else:
+					p1 = np.linspace(st1, end1, num1)
+					p2 = np.linspace(st2, end2, num1)
+					for i in range(p1.shape[0]):
+						icpId.append((p1[i], p2[i]))
+
+	icpId = [(int(icpId[i][0]), int(icpId[i][1])) for i in range(len(icpId))]
+
+	return icpId
+
+
+def writeIcp(icp):
+	poses = open("icp.txt", 'w')
+
+	for i in range(len(icp)):
+		info = str(icp[i][0]) + " " + str(icp[i][1]) + "\n"
+		poses.write(info)
+
+	poses.close()
+
+
 def start(fileName):
 	(X, Y, THETA, LBL) = read(fileName)
 	
@@ -464,7 +516,7 @@ def start(fileName):
 	Nodes_manh = manh(Node_meta, thetas)
 	
 	Nodes = extManh(Nodes_manh)
-	# drawManh(Nodes)
+	drawManh(Nodes)
 
 	writeMlp(Nodes, True)
 
@@ -472,6 +524,7 @@ def start(fileName):
 	# drawConstr(poses)
 
 	icpId = getIcpId(poses, LBL)
+	writeIcp(icpId)
 
 	return (poses, icpId)
 

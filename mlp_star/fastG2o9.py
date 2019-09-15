@@ -5,7 +5,7 @@ import numpy as np
 import csv
 
 import manh_constraint9 as const
-from icpData import icpPoses as iPoses
+from icpDense import icpPoses as iPoses
 
 
 def read(fileName):
@@ -219,7 +219,8 @@ if __name__ == '__main__':
 	# print(poses.shape, poses[0, :])
 
 	# 60 pairs from MLP = 143 nodes in MG of star1
-	mlpN = readCsv(str(argv[2]))[0:60][:]
-	# print(mlpN, len(mlpN))
+	# mlpN = readCsv(str(argv[2]))[0:60][:]
+	mlpN = readCsv(str(argv[2]))
+	# print(len(mlpN))
 
 	writeG2O(X, Y, THETA, poses, mlpN, iPoses, icpId)

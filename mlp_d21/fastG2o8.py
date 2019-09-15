@@ -186,19 +186,20 @@ def writeG2O(X_meta, Y_meta, THETA_meta, poses, mlpN, iPoses, icpId):
 			g2o.write("\n")
 
 	# ICP constraints
-	# g2o.write("# ICP constraints")
-	# g2o.write("\n")
-	# info_mat = "700.0 0.0 0.0 700.0 0.0 700.0"
+	g2o.write("# ICP constraints")
+	g2o.write("\n")
+	info_mat = "700.0 0.0 0.0 700.0 0.0 700.0"
 
-	# for i in range(icpId.shape[0]):
-	# 	x = iPoses[i, 0]; y = iPoses[i, 1]; theta = iPoses[i, 2]; frame1 = icpId[i, 0]; frame2 = icpId[i, 1]
+	# print(icpId.shape, iPoses.shape)
+	for i in range(iPoses.shape[0]):
+		x = iPoses[i, 0]; y = iPoses[i, 1]; theta = iPoses[i, 2]; frame1 = icpId[i, 0]; frame2 = icpId[i, 1]
 
-	# 	if(frame1 == frame2):
-	# 		continue
+		if(frame1 == frame2):
+			continue
 
-	# 	line = "EDGE_SE2 "+str(frame1)+" "+str(frame2)+" "+str(x)+" "+str(y)+" "+str(theta)+" "+info_mat
-	# 	g2o.write(line)
-	# 	g2o.write("\n")			
+		line = "EDGE_SE2 "+str(frame1)+" "+str(frame2)+" "+str(x)+" "+str(y)+" "+str(theta)+" "+info_mat
+		g2o.write(line)
+		g2o.write("\n")			
 
 	g2o.write("FIX 0")
 	g2o.write("\n")
@@ -216,7 +217,8 @@ if __name__ == '__main__':
 	poses = np.asarray(poses); icpId = np.asarray(icpId)
 	# print(poses.shape, poses[0, :])
 
+	# mlpN = readCsv(str(argv[2]))[0:60][:]
 	mlpN = readCsv(str(argv[2]))
-	# print(mlpN)
+	print(len(mlpN))
 
 	writeG2O(X, Y, THETA, poses, mlpN, iPoses, icpId)

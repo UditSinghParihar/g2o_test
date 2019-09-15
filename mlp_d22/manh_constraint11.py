@@ -483,7 +483,7 @@ def startPoses(X, Y, THETA, LBL):
 	Nodes_manh = manh(Node_meta, thetas)
 	
 	Nodes = extManh(Nodes_manh)
-	drawManh(Nodes)
+	# drawManh(Nodes)
 
 	writeMlp(Nodes, True)
 

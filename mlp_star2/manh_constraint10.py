@@ -496,7 +496,7 @@ def start(fileName):
 	
 	Nodes_manh = manh(Node_meta, thetas)
 	Nodes = extManh(Nodes_manh)
-	drawManh(Nodes)
+	# drawManh(Nodes)
 
 	# writeMlp(Nodes, dense=True)
 
