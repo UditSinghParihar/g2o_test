@@ -264,7 +264,7 @@ def writeLoop(X, Y, THETA, g2o):
 
 
 def optimize():
-	cmd = "./g2o posesSim.g2o"
+	cmd = "g2o -o opt.g2o posesSim.g2o"
 	os.system(cmd)
 
 

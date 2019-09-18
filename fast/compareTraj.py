@@ -58,10 +58,10 @@ def readCsv(fileName):
 				# THETA.append(float(line[3]))
 				LBL.append(float(line[4]))
 
-	X_temp = X
-	Y_temp = Y
-	X = [-y for y in Y_temp]
-	Y = [x for x in X_temp]
+	# X_temp = X
+	# Y_temp = Y
+	# X = [-y for y in Y_temp]
+	# Y = [x for x in X_temp]
 
 	THETA = getTheta(X, Y)
 
@@ -83,6 +83,11 @@ def readG2o(fileName):
 			X.append(float(x))
 			Y.append(float(y))
 			THETA.append(float(theta.rstrip('\n')))
+
+	X_temp = X
+	Y_temp = Y
+	X = [y for y in Y_temp]
+	Y = [-x for x in X_temp]
 
 	return (X, Y, THETA)
 	
@@ -134,16 +139,21 @@ def readKitti(fileName):
 
 
 def draw(X1, Y1, X2, Y2, X3, Y3, noisy=True, opt=True ,gt=True):
+	width = 2.5
 	if(opt == True):
-		plt.plot(X1, Y1, 'r-', markersize=5, linewidth=2 ,label='Optimized')
+		plt.plot(X1, Y1, 'g-', markersize=5, linewidth=width ,label='Optimized')
+		plt.savefig("/home/cair/Desktop/opt.png", bbox_inches='tight')
 	
 	if(noisy == True):
-		plt.plot(X2, Y2, 'b-', markersize=5, linewidth=2, label='Noisy')
-	
+		plt.plot(X2, Y2, 'r-', markersize=5, linewidth=width, label='Noisy')
+		plt.savefig("/home/cair/Desktop/noisy.png", bbox_inches='tight')
+
 	if(gt == True):
-		plt.plot(X3, Y3, 'g-', markersize=5, linewidth=2 ,label='Ground Truth')
-	
-	plt.legend()
+		plt.plot(X3, Y3, 'b-', markersize=5, linewidth=width ,label='Ground Truth')
+		plt.savefig("/home/cair/Desktop/gt.png", bbox_inches='tight')
+
+	# plt.legend()
+	plt.axis('scaled')
 	plt.show()
 
 
@@ -152,21 +162,25 @@ if __name__ == '__main__':
 	fileNoise = str(argv[2])
 	fileGt = str(argv[3])
 	
-	# (X1, Y1, THETA1) =	readG2o(fileOpt)
-	(X1, Y1, THETA1) = readKitti(fileOpt)	
+	(X1, Y1, THETA1) =	readG2o(fileOpt)
+	# (X1, Y1, THETA1) = readKitti(fileOpt)
 
-	# (X2, Y2, THETA2, LBL) = readCsv(fileNoise)
+	(X2, Y2, THETA2, LBL) = readCsv(fileNoise)
 	# (X2, Y2, THETA2, LBL) = readTxt(fileNoise)
-	(X2, Y2, THETA2) = readKitti(fileNoise)
+	# (X2, Y2, THETA2) = readKitti(fileNoise)
 
-	# (X3, Y3, THETA3, LBL) = readTxt(fileGt)
-	(X3, Y3, THETA3) = readKitti(fileGt)
+	(X3, Y3, THETA3, LBL) = readTxt(fileGt)
+	# (X3, Y3, THETA3) = readKitti(fileGt)
 
 	# X1 = X1[0:2800]; Y1 = Y1[0:2800]
 	# X2 = X2[0:2800]; Y2 = Y2[0:2800]
 	# X3 = X3[0:2800]; Y3 = Y3[0:2800]
 
-	draw(X1, Y1, X2, Y2, X3, Y3, opt=False)
+	# draw(X1, Y1, X2, Y2, X3, Y3, opt=False)
+	# draw(X1, Y1, X2, Y2, X3, Y3, noisy=False, gt=False)
+	# draw(X1, Y1, X2, Y2, X3, Y3)
+	# draw(X1, Y1, X2, Y2, X3, Y3, noisy=False)
+
+	draw(X1, Y1, X2, Y2, X3, Y3, opt=False, gt=False)
 	draw(X1, Y1, X2, Y2, X3, Y3, noisy=False, gt=False)
-	draw(X1, Y1, X2, Y2, X3, Y3)
-	draw(X1, Y1, X2, Y2, X3, Y3, noisy=False)
+	draw(X1, Y1, X2, Y2, X3, Y3, noisy=False, opt=False)

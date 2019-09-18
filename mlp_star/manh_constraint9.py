@@ -455,11 +455,11 @@ def start(fileName):
 	# X = X[2900: -1]; Y = Y[2900: -1]; LBL = LBL[2900: -1]
 
 	print(len(X))
-	# draw(X, Y, LBL)
+	draw(X, Y, LBL)
 
 	Node_meta = meta(X, Y, LBL)
 	Node_meta = outRemove(Node_meta)
-	# drawMeta(Node_meta)
+	drawMeta(Node_meta)
 
 	Nodes = []
 
@@ -478,14 +478,14 @@ def start(fileName):
 	Nodes = extManh(Nodes_manh)
 	drawManh(Nodes)
 
-	writeMlp(Nodes, True)
+	# writeMlp(Nodes, True)
 
 	poses = getConstr(Nodes_manh, Nodes)
 	# drawConstr(poses)
 
 	icpId = getIcpId(poses, LBL)
 	# print(icpId)
-	writeIcp(icpId)
+	# writeIcp(icpId)
 
 	return (poses, icpId)
 

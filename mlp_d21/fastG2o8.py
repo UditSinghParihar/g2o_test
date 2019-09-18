@@ -222,3 +222,4 @@ if __name__ == '__main__':
 	print(len(mlpN))
 
 	writeG2O(X, Y, THETA, poses, mlpN, iPoses, icpId)
+	# print(iPoses.shape, icpId.shape)

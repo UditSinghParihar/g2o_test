@@ -273,6 +273,7 @@ def draw(X, Y, LBL):
 	ax.plot(X2, Y2, 'go', label='Trisection')
 	ax.plot(X3, Y3, 'yo', label='Intersection')
 	
+	plt.axis('scaled')
 	plt.show()
 
 
@@ -300,6 +301,7 @@ def drawManh(Nodes):
 			ax.plot(x, y, 'yo')
 			ax.plot(x, y, 'y-')
 
+	plt.axis('scaled')
 	plt.show()
 
 
@@ -503,7 +505,7 @@ if __name__ == '__main__':
 
 		theta = calcTheta(x[0], x[1], y[0], y[1])
 		thetas.append(theta)
-	drawTheta(Node_meta, thetas)
+	# drawTheta(Node_meta, thetas)
 	
 	Nodes_manh = manh(Node_meta, thetas)
 	Nodes = extManh(Nodes_manh)
