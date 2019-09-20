@@ -5,8 +5,8 @@ import numpy as np
 import csv
 import os
 
-import manh_constraint9 as const
-from icpDense import icpPoses as iPoses
+import manh_constraint10 as const
+from icpData import icpId, icpPoses as iPoses
 
 
 def read(fileName):
@@ -81,7 +81,7 @@ def drawTheta(X, Y, LBL, thetas):
 def draw(X, Y, LBL):
 	X0 = []; Y0 = []; X1 = []; Y1 = []; X2 = []; Y2 =[]; X3 = []; Y3 = [];
 	
-	for i in xrange(len(X)):
+	for i in xrange(len(LBL)):
 		if LBL[i] == 0:
 			X0.append(X[i])
 			Y0.append(Y[i])
@@ -115,14 +115,14 @@ def writeG2O(X_meta, Y_meta, THETA_meta, poses, mlpN, iPoses, icpId):
 	
 	# g2o = open('/run/user/1000/gvfs/sftp:host=ada.iiit.ac.in,user=udit/home/udit/share/lessNoise.g2o', 'w')
 	g2o = open('lessNoise.g2o', 'w')
-	
+
 	for i, (x, y, theta) in enumerate(zip(X_meta,Y_meta,THETA_meta)):
 		line = "VERTEX_SE2 " + str(i) + " " + str(x) + " " + str(y) + " " + str(theta)
 		g2o.write(line)
 		g2o.write("\n")
 
 	# Odometry
-	g2o.write("\n# Odometry constraints\n\n")
+	g2o.write("# Odometry constraints\n\n")
 	info_mat = "500.0 0.0 0.0 500.0 0.0 500.0"
 	for i in range(1, len(X_meta)):
 		p1 = (X_meta[i-1], Y_meta[i-1], THETA_meta[i-1])
@@ -134,16 +134,15 @@ def writeG2O(X_meta, Y_meta, THETA_meta, poses, mlpN, iPoses, icpId):
 		del_y = str(T2_1[1][2])
 		del_theta = str(math.atan2(T2_1[1, 0], T2_1[0, 0]))
 		
-		line = "EDGE_SE2 "+str(i-1)+" "+str(i)+" "+del_x+" "+del_y+" "+del_theta+" "+info_mat
+		line = "EDGE_SE2 "+str(i-1)+" "+str(i)+" "+del_x+" "+del_y+" "+del_theta+" "+info_mat+"\n"
 		g2o.write(line)
-		g2o.write("\n")
 
 	# Manhattan constraints
 	# g2o.write("# Manhattan constraints")
 	# g2o.write("\n")
 	# info_mat = "300.0 0.0 0.0 300.0 0.0 700.0"
 
-	# for i in range(1, len(poses)):
+	# for i in range(1, len(poses), 3):
 	# 	p1 = (poses[0, 0], poses[0, 1], poses[0, 2])
 	# 	p2 = (poses[i, 0], poses[i, 1], poses[i, 2])
 	# 	startId = int(poses[0, 3]); denseId = int(poses[i, 3])
@@ -159,12 +158,14 @@ def writeG2O(X_meta, Y_meta, THETA_meta, poses, mlpN, iPoses, icpId):
 	# 	g2o.write(line)
 	# 	g2o.write("\n")
 
+	
 	# MLP Manhattan constraints
-	g2o.write("\n\n# MLP Manhattan constraints\n\n")
+	g2o.write("\n# MLP Manhattan constraints\n\n")
+	# g2o.write("\n")
 	info_mat = "300.0 0.0 0.0 300.0 0.0 700.0"
 	for i in range(len(mlpN)):
 		n1 = mlpN[i][1]; n2 = mlpN[i][0]
-		s1 = 2*n1; s2 = s1+1; t1 = 2*n2; t2 = t1+1
+		s1 = 2*n1; s2 = s1+1; t1 = 2*n2; t2 = t1+1  
 		
 		# s1 -> t1; s1 -> t2; s2 -> t1; s2 -> t2
 		pairs = [(s1, t1), (s1, t2), (s2, t1), (s2, t2)]
@@ -176,7 +177,7 @@ def writeG2O(X_meta, Y_meta, THETA_meta, poses, mlpN, iPoses, icpId):
 			p2 = (poses[e2, 0], poses[e2, 1], poses[e2, 2])
 			startId = int(poses[e1, 3]); endId = int(poses[e2, 3])
 
-			if(endId < len(X_meta)):	
+			if(endId < len(X_meta)):
 				T1_w = np.array([[math.cos(p1[2]), -math.sin(p1[2]), p1[0]], [math.sin(p1[2]), math.cos(p1[2]), p1[1]], [0, 0, 1]])
 				T2_w = np.array([[math.cos(p2[2]), -math.sin(p2[2]), p2[0]], [math.sin(p2[2]), math.cos(p2[2]), p2[1]], [0, 0, 1]])
 				T2_1 = np.dot(np.linalg.inv(T1_w), T2_w)
@@ -186,11 +187,11 @@ def writeG2O(X_meta, Y_meta, THETA_meta, poses, mlpN, iPoses, icpId):
 				
 				line = "EDGE_SE2 "+str(startId)+" "+str(endId)+" "+del_x+" "+del_y+" "+del_theta+" "+info_mat+"\n"
 				g2o.write(line)
-				loops.append((startId, endId))
+				loops.append((startId, endId, 1))
 
 	# ICP constraints
-	g2o.write("\n# ICP constraints\n\n")
-	info_mat = "700.0 0.0 0.0 700.0 0.0 900.0"
+	g2o.write("# ICP constraints\n\n")
+	info_mat = "700.0 0.0 0.0 700.0 0.0 700.0"
 
 	for i in range(icpId.shape[0]):
 		x = iPoses[i, 0]; y = iPoses[i, 1]; theta = iPoses[i, 2]; frame1 = icpId[i, 0]; frame2 = icpId[i, 1]
@@ -201,8 +202,8 @@ def writeG2O(X_meta, Y_meta, THETA_meta, poses, mlpN, iPoses, icpId):
 
 			line = "EDGE_SE2 "+str(frame1)+" "+str(frame2)+" "+str(x)+" "+str(y)+" "+str(theta)+" "+info_mat+"\n"
 			g2o.write(line)
-			loops.append((frame1, frame2))
-
+			loops.append((frame1, frame2, 0))
+			
 	g2o.write("FIX 0\n")
 	g2o.close()
 
@@ -210,7 +211,7 @@ def writeG2O(X_meta, Y_meta, THETA_meta, poses, mlpN, iPoses, icpId):
 
 
 def optimize():
-	cmd = "g2o -robustKernel Cauchy -robustKernelWidth 1 -o opt.g2o -i 20 lessNoise.g2o > /dev/null 2>&1"
+	cmd = "g2o -robustKernel Cauchy -robustKernelWidth 1 -o opt.g2o -i 50  lessNoise.g2o > /dev/null 2>&1"
 	os.system(cmd)
 
 
@@ -281,16 +282,19 @@ def drawAnim(X, Y, LBL, loops=[], blk=False):
 	plt.plot(X, Y, 'k-')
 
 	for e in loops:
-		cX = [X[e[0]], X[e[1]]]; cY = [Y[e[0]], Y[e[1]]]
-		plt.plot(cX, cY, 'y--')	
+		if(e[2] == 1):
+			cX = [X[e[0]], X[e[1]]]; cY = [Y[e[0]], Y[e[1]]]
+			plt.plot(cX, cY, 'm--')	
+		if(e[2] == 0):
+			cX = [X[e[0]], X[e[1]]]; cY = [Y[e[0]], Y[e[1]]]
+			plt.plot(cX, cY, 'g--', linewidth=3.0)
 
-	plt.xlim(-30, 15)
-	plt.ylim(-30, 10)
+	plt.xlim(-50, 10)
+	plt.ylim(-35, 10)
 	plt.show(block=blk)
 	plt.pause(0.001)
 
 	plt.clf()
-
 
 
 def animate(X, Y, THETA, LBL):
@@ -338,18 +342,19 @@ if __name__ == '__main__':
 	fileNoise = str(argv[1]); fileMlp = str(argv[2]); fileAlign = str(argv[3])
 
 	(X, Y, THETA, LBL) = read(fileNoise)
-	X = X[0:2800]; Y = Y[0:2800]; LBL = LBL[0:2800]
+	X = X[3100: 6000]; Y = Y[3100: 6000]; LBL = LBL[3100: 6000]; THETA = THETA[3100: 6000]
 	(X, Y, THETA) = readKitti(fileAlign)
 
-	# draw(X, Y, LBL)
+	draw(X, Y, LBL)
 	# drawTheta(X, Y, LBL, THETA)
 
 	# poses, icpId = const.start(fileNoise)
-	poses, icpId = const.startPose(X, Y, THETA, LBL)
-	poses = np.asarray(poses); icpId = np.asarray(icpId)
+	poses, _ = const.startPose(X, Y, THETA, LBL)
+	poses = np.asarray(poses)
 
 	mlpN = readCsv(fileMlp)
 
+	# print(iPoses.shape, icpId.shape)
 	writeG2O(X, Y, THETA, poses, mlpN, iPoses, icpId)
 	# writeG2O(X[0:1500], Y[0:1500], THETA[0:1500], poses, mlpN, iPoses, icpId)
 	optimize()

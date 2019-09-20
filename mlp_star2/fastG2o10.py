@@ -118,8 +118,7 @@ def writeG2O(X_meta, Y_meta, THETA_meta, poses, mlpN, iPoses, icpId):
 		g2o.write("\n")
 
 	# Odometry
-	g2o.write("# Odometry constraints")
-	g2o.write("\n")
+	g2o.write("# Odometry constraints\n\n")
 	info_mat = "500.0 0.0 0.0 500.0 0.0 500.0"
 	for i in range(1, len(X_meta)):
 		p1 = (X_meta[i-1], Y_meta[i-1], THETA_meta[i-1])
@@ -131,9 +130,8 @@ def writeG2O(X_meta, Y_meta, THETA_meta, poses, mlpN, iPoses, icpId):
 		del_y = str(T2_1[1][2])
 		del_theta = str(math.atan2(T2_1[1, 0], T2_1[0, 0]))
 		
-		line = "EDGE_SE2 "+str(i-1)+" "+str(i)+" "+del_x+" "+del_y+" "+del_theta+" "+info_mat
+		line = "EDGE_SE2 "+str(i-1)+" "+str(i)+" "+del_x+" "+del_y+" "+del_theta+" "+info_mat+"\n"
 		g2o.write(line)
-		g2o.write("\n")
 
 	# Manhattan constraints
 	# g2o.write("# Manhattan constraints")
@@ -184,11 +182,9 @@ def writeG2O(X_meta, Y_meta, THETA_meta, poses, mlpN, iPoses, icpId):
 			
 			line = "EDGE_SE2 "+str(startId)+" "+str(denseId)+" "+del_x+" "+del_y+" "+del_theta+" "+info_mat+"\n"
 			g2o.write(line)
-			# g2o.write("\n")
 
 	# ICP constraints
-	g2o.write("# ICP constraints")
-	g2o.write("\n")
+	g2o.write("# ICP constraints\n\n")
 	info_mat = "700.0 0.0 0.0 700.0 0.0 700.0"
 
 	for i in range(icpId.shape[0]):
@@ -197,30 +193,51 @@ def writeG2O(X_meta, Y_meta, THETA_meta, poses, mlpN, iPoses, icpId):
 		if(frame1 == frame2):
 			continue
 
-		line = "EDGE_SE2 "+str(frame1)+" "+str(frame2)+" "+str(x)+" "+str(y)+" "+str(theta)+" "+info_mat
+		line = "EDGE_SE2 "+str(frame1)+" "+str(frame2)+" "+str(x)+" "+str(y)+" "+str(theta)+" "+info_mat+"\n"
 		g2o.write(line)
-		g2o.write("\n")
 			
-	g2o.write("FIX 0")
-	g2o.write("\n")
+	g2o.write("FIX 0\n")
 	g2o.close()
 
 
+def optimize():
+	cmd = "g2o -robustKernel Cauchy -robustKernelWidth 1 -o opt.g2o -i 20 lessNoise.g2o > /dev/null 2>&1"
+	os.system(cmd)
+
+
+def readG2o(fileName):
+	f = open(fileName, 'r')
+	A = f.readlines()
+	f.close()
+
+	X = []
+	Y = []
+	THETA = []
+
+	for line in A:
+		if "VERTEX_SE2" in line:
+			(ver, ind, x, y, theta) = line.split(' ')
+			X.append(float(x))
+			Y.append(float(y))
+			THETA.append(float(theta.rstrip('\n')))
+
+	return (X, Y, THETA)
+
 
 if __name__ == '__main__':
-	fileName = str(argv[1])
-	(X, Y, THETA, LBL) = read(fileName)
+	fileNoise = str(argv[1]); fileMlp = str(argv[2])
+
+	(X, Y, THETA, LBL) = read(fileNoise)
 	X = X[3100: 6000]; Y = Y[3100: 6000]; LBL = LBL[3100: 6000]; THETA = THETA[3100: 6000]
-	# X = X[50:2800]; Y = Y[50:2800]; LBL = LBL[50:2800]
 
 	# draw(X, Y, LBL)
 	# drawTheta(X, Y, LBL, THETA)
 
-	poses, icpId = const.start(fileName)
+	poses, icpId = const.start(fileNoise)
 	poses = np.asarray(poses); icpId = np.asarray(icpId)
-	# print(poses.shape, poses[0, :])
 
-	mlpN = readCsv(str(argv[2]))
-	print(len(mlpN))
+	mlpN = readCsv(fileMlp)
+	print(poses.shape, len(mlpN))
 
 	writeG2O(X, Y, THETA, poses, mlpN, iPoses, icpId)
+	# print(iPoses.shape, icpId.shape)

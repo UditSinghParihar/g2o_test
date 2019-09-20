@@ -344,9 +344,10 @@ def extManh(Nodes_manh):
 		mag = line[0]; theta = line[1]; lbl = line[2]; stPose = line[3]; endPose = line[4]
 		
 		if((theta - Nodes_manh[i-1][1] == 180) and (i != 0)):
-			l1 = l2 - 0.2
-			# l1 = l2 + 0.2
-			b1 = b2 + 0.2
+			# l1 = l2 - 0.2
+			# b1 = b2 + 0.2
+			l1 = l2
+			b1 = b2
 			l2 = l1 + mag*math.cos(math.radians(theta))
 			b2 = b1 + mag*math.sin(math.radians(theta))
 			Nodes.append((l1, b1, l2, b2, lbl, stPose, endPose))
@@ -366,26 +367,26 @@ def extManh(Nodes_manh):
 	return Nodes
 
 
-# def writeMlp(Nodes, dense=True):
-# 	# Saving format: Rightward = b and Downwards = l
+def writeMlp(Nodes, dense=True):
+	# Saving format: Rightward = b and Downwards = l
 
-# 	poses = open("mlp_in.txt", 'w')
-# 	densePoses = open("mlp_in_dense.txt", 'w')
-# 	for line in Nodes:
-# 		if(dense == True):
-# 			info = str(-line[1])+" "+str(line[0])+" "+ str(-line[3])+" "+ str(line[2])+" "+ str(line[4])
+	poses = open("mlp_in.txt", 'w')
+	densePoses = open("mlp_in_dense.txt", 'w')
+	for line in Nodes:
+		if(dense == True):
+			info = str(-line[1])+" "+str(line[0])+" "+ str(-line[3])+" "+ str(line[2])+" "+ str(line[4])
 			
-# 			infoDense = str(line[5])+" "+str(line[6])
-# 			densePoses.write(infoDense)
-# 			densePoses.write("\n")
-# 		else:
-# 			info = str(-line[1])+" "+str(line[0])+" "+ str(-line[3])+" "+ str(line[2])+" "+ str(line[4])
+			infoDense = str(line[5])+" "+str(line[6])
+			densePoses.write(infoDense)
+			densePoses.write("\n")
+		else:
+			info = str(-line[1])+" "+str(line[0])+" "+ str(-line[3])+" "+ str(line[2])+" "+ str(line[4])
 		
-# 		poses.write(info)
-# 		poses.write("\n")
+		poses.write(info)
+		poses.write("\n")
 
-# 	poses.close()
-# 	densePoses.close()
+	poses.close()
+	densePoses.close()
 
 
 def getConstr(Nodes_manh, Nodes):
@@ -455,7 +456,6 @@ def getIcpId(poses, LBL):
 			if(minDist < thres):
 				# print(minDist, idi, idj)
 				icp.append((denseIdi, denseIdj))
-
 	return icp
 
 
@@ -506,6 +506,44 @@ def start(fileName):
 
 	icpId = getIcpId(poses, LBL)
 	# print(icpId)
+	# writeIcp(icpId)
+
+	return (poses, icpId)
+
+
+def startPose(X, Y, THETA, LBL):
+	# (X, Y, THETA, LBL) = read(fileName)
+	
+	# X = X[3100: 6000]; Y = Y[3100: 6000]; LBL = LBL[3100: 6000]; THETA = THETA[3100: 6000]	
+	# draw(X, Y, LBL)
+
+	Node_meta = meta(X, Y, LBL)
+	Node_meta = outRemove(Node_meta)
+	# drawMeta(Node_meta)
+
+	Nodes = []
+
+	thetas = []
+	for line in Node_meta:
+		lbl = line[4]
+		x = [line[0], line[2]]
+		y = [line[1], line[3]]
+
+		theta = calcTheta(x[0], x[1], y[0], y[1])
+		thetas.append(theta)
+	# drawTheta(Node_meta, thetas)
+	
+	Nodes_manh = manh(Node_meta, thetas)
+	
+	Nodes = extManh(Nodes_manh)
+	drawManh(Nodes)
+
+	writeMlp(Nodes, True)
+
+	poses = getConstr(Nodes_manh, Nodes)
+	# drawConstr(poses)
+
+	icpId = getIcpId(poses, LBL)
 	writeIcp(icpId)
 
 	return (poses, icpId)
