@@ -1,9 +1,12 @@
+# Usage : python fastG2o11.py tf_label_unopt.txt loop_star2_disp.csv noise.kitti
+
 from sys import argv, exit
 import matplotlib.pyplot as plt
 import math
 import numpy as np
 import csv
 import os
+import matplotlib.gridspec as gridspec
 
 import manh_constraint10 as const
 from icpData import icpId, icpPoses as iPoses
@@ -81,7 +84,7 @@ def drawTheta(X, Y, LBL, thetas):
 def draw(X, Y, LBL):
 	X0 = []; Y0 = []; X1 = []; Y1 = []; X2 = []; Y2 =[]; X3 = []; Y3 = [];
 	
-	for i in xrange(len(LBL)):
+	for i in range(len(LBL)):
 		if LBL[i] == 0:
 			X0.append(X[i])
 			Y0.append(Y[i])
@@ -101,11 +104,11 @@ def draw(X, Y, LBL):
 	fig = plt.figure()
 	ax = plt.subplot(111)
 
-	ax.plot(X0, Y0, 'ro', label='Rackspace')
-	ax.plot(X1, Y1, 'bo', label='Corridor')
-	ax.plot(X2, Y2, 'go', label='Trisection')
-	ax.plot(X3, Y3, 'yo', label='Intersection')
-	plt.plot(X, Y, 'k-')
+	ax.plot(X0, Y0, 'ro', label='Rackspace', markersize=3.5)
+	ax.plot(X1, Y1, 'bo', label='Corridor', markersize=3.5)
+	ax.plot(X2, Y2, 'go', label='Trisection', markersize=3.5)
+	ax.plot(X3, Y3, 'yo', label='Intersection', markersize=3.5)
+	plt.plot(X, Y, 'k-', linewidth=0.5)
 
 	plt.show()
 
@@ -261,7 +264,7 @@ def readKitti(fileName):
 def drawAnim(X, Y, LBL, loops=[], blk=False):
 	X0 = []; Y0 = []; X1 = []; Y1 = []; X2 = []; Y2 =[]; X3 = []; Y3 = [];
 	
-	for i in xrange(len(LBL)):
+	for i in range(len(LBL)):
 		if LBL[i] == 0:
 			X0.append(X[i])
 			Y0.append(Y[i])
@@ -278,30 +281,193 @@ def drawAnim(X, Y, LBL, loops=[], blk=False):
 			X3.append(X[i])
 			Y3.append(Y[i])
 
-	plt.plot(X0, Y0, 'ro', label='Rackspace')
-	plt.plot(X1, Y1, 'bo', label='Corridor')
-	plt.plot(X2, Y2, 'go', label='Trisection')
-	plt.plot(X3, Y3, 'yo', label='Intersection')
-	plt.plot(X, Y, 'k-')
+	plt.plot(X0, Y0, 'ro', label='Rackspace', markersize=3.5)
+	plt.plot(X1, Y1, 'bo', label='Corridor', markersize=3.5)
+	plt.plot(X2, Y2, 'go', label='Trisection', markersize=3.5)
+	plt.plot(X3, Y3, 'yo', label='Intersection', markersize=3.5)
+	plt.plot(X, Y, 'k-', linewidth=0.5)
 
 	for e in loops:
 		if(e[3] == 1):
 			if(e[2] == 1):
 				cX = [X[e[0]], X[e[1]]]; cY = [Y[e[0]], Y[e[1]]]
-				plt.plot(cX, cY, 'm--')	
+				plt.plot(cX, cY, 'm--', linewidth=1.0)	
 			if(e[2] == 0):
 				cX = [X[e[0]], X[e[1]]]; cY = [Y[e[0]], Y[e[1]]]
-				plt.plot(cX, cY, 'g--', linewidth=3.0)
+				plt.plot(cX, cY, 'g--', linewidth=2.0)
 
-	plt.xlim(-50, 10)
-	plt.ylim(-35, 10)
+	plt.xlim(-45, 5)
+	plt.ylim(-30, 5)
 	plt.show(block=blk)
 	plt.pause(0.001)
 
 	plt.clf()
 
 
-def animate(X, Y, THETA, LBL):
+def drawAnimNoise(XO, YO, X, Y, LBL, Nodes, loops, mlpN, blk=False):
+	fig = plt.figure("Animation", constrained_layout=True)
+	gs = fig.add_gridspec(nrows=2, ncols=2)
+
+	ax1 = fig.add_subplot(gs[0, 0])
+	X0 = []; Y0 = []; X1 = []; Y1 = []; X2 = []; Y2 =[]; X3 = []; Y3 = [];
+	
+	for i in range(len(LBL)):
+		if LBL[i] == 0:
+			X0.append(X[i])
+			Y0.append(Y[i])
+
+		elif LBL[i] == 1:
+			X1.append(X[i])
+			Y1.append(Y[i])
+
+		elif LBL[i] == 2:
+			X2.append(X[i])
+			Y2.append(Y[i])
+
+		elif LBL[i] == 3:
+			X3.append(X[i])
+			Y3.append(Y[i])
+
+	ax1.plot(X0, Y0, 'ro', label='Rackspace', markersize=3)
+	ax1.plot(X1, Y1, 'bo', label='Corridor', markersize=3)
+	ax1.plot(X2, Y2, 'go', label='Trisection', markersize=3)
+	ax1.plot(X3, Y3, 'yo', label='Intersection', markersize=3)
+	ax1.plot(X, Y, 'k-', linewidth=0.5)
+
+	for e in loops:
+		if(e[3] == 1):
+			if(e[2] == 1):
+				cX = [X[e[0]], X[e[1]]]; cY = [Y[e[0]], Y[e[1]]]
+				ax1.plot(cX, cY, 'm--', linewidth=0.5)
+			if(e[2] == 0):
+				cX = [X[e[0]], X[e[1]]]; cY = [Y[e[0]], Y[e[1]]]
+				ax1.plot(cX, cY, 'g--', linewidth=1.5)
+
+	ax1.set_xlim([-45, 10])
+	ax1.set_ylim([-40, 10])
+	
+
+	ax2 = fig.add_subplot(gs[0, 1])
+	idManh = 0
+	for i, line in enumerate(Nodes):
+		l1=line[0]; b1=line[1]; l2=line[2]; b2=line[3]; lbl=line[4]; stPose=line[5]; endPose=line[6]
+
+		if(endPose < len(X)):
+			x = [l1, l2]
+			y = [b1, b2]
+
+			if lbl == 0:
+				ax2.plot(x, y, 'ro', markersize=3.5)
+				ax2.plot(x, y, 'r-', linewidth=0.5)
+
+			elif lbl == 1:
+				ax2.plot(x, y, 'bo', markersize=3.5)
+				ax2.plot(x, y, 'b-', linewidth=0.5)
+
+			elif lbl == 2:
+				ax2.plot(x, y, 'go', markersize=3.5)
+				ax2.plot(x, y, 'g-', linewidth=0.5)
+
+			elif lbl == 3:
+				ax2.plot(x, y, 'yo', markersize=3.5)
+				ax2.plot(x, y, 'y-', linewidth=0.5)
+			idManh += 1
+
+	# print(idManh)
+	for line in mlpN:
+		t = line[0]-1; s = line[1]-1
+		if(idManh == t and line[2] == 1):
+			line1 = Nodes[s]; line2 = Nodes[t]
+			
+			l1=line1[0]; b1=line1[1]; l2=line1[2]; b2=line1[3]; lbl=line1[4]			
+			x = [l1, l2]; y = [b1, b2]
+
+			if lbl == 0:
+				ax2.plot(x, y, 'ro', markersize=3.5)
+				ax2.plot(x, y, 'r-', linewidth=3.5)
+
+			elif lbl == 1:
+				ax2.plot(x, y, 'bo', markersize=3.5)
+				ax2.plot(x, y, 'b-', linewidth=3.5)
+
+			elif lbl == 2:
+				ax2.plot(x, y, 'go', markersize=3.5)
+				ax2.plot(x, y, 'g-', linewidth=3.5)
+
+			elif lbl == 3:
+				ax2.plot(x, y, 'yo', markersize=3.5)
+				ax2.plot(x, y, 'y-', linewidth=3.5)
+
+
+			l1=line2[0]; b1=line2[1]; l2=line2[2]; b2=line2[3]; lbl=line2[4]			
+			x = [l1, l2]; y = [b1, b2]
+
+			if lbl == 0:
+				ax2.plot(x, y, 'ro', markersize=3.5)
+				ax2.plot(x, y, 'r-', linewidth=3.5)
+
+			elif lbl == 1:
+				ax2.plot(x, y, 'bo', markersize=3.5)
+				ax2.plot(x, y, 'b-', linewidth=3.5)
+
+			elif lbl == 2:
+				ax2.plot(x, y, 'go', markersize=3.5)
+				ax2.plot(x, y, 'g-', linewidth=3.5)
+
+			elif lbl == 3:
+				ax2.plot(x, y, 'yo', markersize=3.5)
+				ax2.plot(x, y, 'y-', linewidth=3.5)
+			
+			break
+
+	ax2.set_xlim([-22, 25])
+	ax2.set_ylim([-15, 15])
+
+
+	ax3 = fig.add_subplot(gs[1, :])
+	X0 = []; Y0 = []; X1 = []; Y1 = []; X2 = []; Y2 =[]; X3 = []; Y3 = [];
+	
+	for i in range(len(LBL)):
+		if LBL[i] == 0:
+			X0.append(XO[i])
+			Y0.append(YO[i])
+
+		elif LBL[i] == 1:
+			X1.append(XO[i])
+			Y1.append(YO[i])
+
+		elif LBL[i] == 2:
+			X2.append(XO[i])
+			Y2.append(YO[i])
+
+		elif LBL[i] == 3:
+			X3.append(XO[i])
+			Y3.append(YO[i])
+
+	ax3.plot(X0, Y0, 'ro', label='Rackspace', markersize=3)
+	ax3.plot(X1, Y1, 'bo', label='Corridor', markersize=3)
+	ax3.plot(X2, Y2, 'go', label='Trisection', markersize=3)
+	ax3.plot(X3, Y3, 'yo', label='Intersection', markersize=3)
+	ax3.plot(XO, YO, 'k-', linewidth=0.5)
+
+	for e in loops:
+		if(e[3] == 1):
+			if(e[2] == 1):
+				cX = [XO[e[0]], XO[e[1]]]; cY = [YO[e[0]], YO[e[1]]]
+				ax3.plot(cX, cY, 'm--', linewidth=1)
+			if(e[2] == 0):
+				cX = [XO[e[0]], XO[e[1]]]; cY = [YO[e[0]], YO[e[1]]]
+				ax3.plot(cX, cY, 'g--', linewidth=2.0)
+
+	ax3.set_xlim([-50, 5])
+	ax3.set_ylim([-30, 5])
+
+	plt.show(block=blk)
+	plt.pause(0.001)
+	plt.clf()
+
+
+def animate(X, Y, THETA, LBL, Nodes, mlpN):
 	trans = []
 
 	for i in range(1, len(X)):
@@ -312,11 +478,14 @@ def animate(X, Y, THETA, LBL):
 		T2_1 = np.dot(np.linalg.inv(T1_w), T2_w)
 		trans.append(T2_1)
 
-	Xp = []; Yp = []; THETAp = []
-	Xp.append(X[0]); Yp.append(Y[0]); THETAp.append(THETA[0])
+	Xp = []; Yp = []; THETAp = []; 
+	Xp.append(X[0]); Yp.append(Y[0]); THETAp.append(THETA[0]); 
 
-	# for i in xrange(1000):
-	for i in xrange(len(trans)):
+	XpN = []; YpN = []; THETApN = []
+	XpN.append(X[0]); YpN.append(Y[0]); THETApN.append(THETA[0]) 
+
+	# for i in range(1000):
+	for i in range(len(trans)):
 		p1 = (Xp[i], Yp[i], THETAp[i])
 		T1_w = np.array([[math.cos(p1[2]), -math.sin(p1[2]), p1[0]], [math.sin(p1[2]), math.cos(p1[2]), p1[1]], [0, 0, 1]])
 		T2_1 = trans[i]
@@ -324,7 +493,16 @@ def animate(X, Y, THETA, LBL):
 		x = T2_w[0][2]
 		y = T2_w[1][2]
 		theta = math.atan2(T2_w[1, 0], T2_w[0, 0])
-		Xp.append(x); Yp.append(y); THETAp.append(theta)
+		Xp.append(x); Yp.append(y); THETAp.append(theta); 
+
+		p1N = (XpN[i], YpN[i], THETApN[i])
+		T1_w = np.array([[math.cos(p1N[2]), -math.sin(p1N[2]), p1N[0]], [math.sin(p1N[2]), math.cos(p1N[2]), p1N[1]], [0, 0, 1]])
+		T2_1 = trans[i]
+		T2_w = np.dot(T1_w, T2_1)
+		x = T2_w[0][2]
+		y = T2_w[1][2]
+		theta = math.atan2(T2_w[1, 0], T2_w[0, 0])
+		XpN.append(x); YpN.append(y); THETApN.append(theta)
 
 	# Opt animation
 		if(i%5 == 0):
@@ -334,12 +512,21 @@ def animate(X, Y, THETA, LBL):
 				(xOpt, yOpt, tOpt) = readG2o("opt.g2o")
 				Xp[0:len(Xp)] = xOpt; Yp[0:len(Yp)] = yOpt; THETAp[0:len(THETAp)] = tOpt
 
-			drawAnim(Xp, Yp, LBL[0:len(Xp)], loops)
-	drawAnim(Xp, Yp, LBL[0:len(Xp)], loops, blk=True)
+			# drawAnimNoise(Xp[0:i], Yp[0:i], XpN[0:i], YpN[0:i], LBL[0:i], Nodes, loops)
+			drawAnimNoise(Xp, Yp, XpN, YpN, LBL[0:len(Xp)], Nodes, loops, mlpN)
+
+
+
+
+
+
+
+
+	# drawAnim(Xp, Yp, LBL[0:len(Xp)], loops, blk=True)
 
 	# Unopt animation
 	# for i in range(0, len(X), 5):
-	# 	drawAnim(Xp[0:i], Yp[0:i], LBL[0:i])
+		# drawAnimNoise(Xp[0:i], Yp[0:i], LBL[0:i], Nodes)
 	# drawAnim(Xp, Yp, LBL[0:len(Xp)], loops=[], blk=True)
 
 
@@ -354,7 +541,7 @@ if __name__ == '__main__':
 	# drawTheta(X, Y, LBL, THETA)
 
 	# poses, icpId = const.start(fileNoise)
-	poses, _ = const.startPose(X, Y, THETA, LBL)
+	poses, Nodes = const.startPose(X, Y, THETA, LBL)
 	poses = np.asarray(poses)
 
 	mlpN = readCsv(fileMlp)
@@ -366,4 +553,4 @@ if __name__ == '__main__':
 	(xOpt, yOpt, tOpt) = readG2o("opt.g2o")
 	drawAnim(xOpt, yOpt, LBL, loops, blk=True)
 
-	animate(X, Y, THETA, LBL)
+	animate(X, Y, THETA, LBL, Nodes, mlpN)

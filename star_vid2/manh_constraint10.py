@@ -48,14 +48,14 @@ def read(fileName):
 
 
 def blueFix(st, end, X, Y, LBL, Node_meta):
-	mid = st + (end - st)/2
+	mid = int(st + (end - st)/2)
 	# print("Blue nodes: ", end-st)
 	xMid = 0; yMid =0; fill = True
 
-	for i in xrange(st, end-9):
+	for i in range(st, end-9):
 		if(fill == True):
-			X1 = [X[j] for j in xrange(i, i+8)]; Y1 = [Y[j] for j in xrange(i, i+8)] 
-			X2 = [X[j] for j in xrange(i+8, i+16)]; Y2 = [Y[j] for j in xrange(i+8, i+16)]
+			X1 = [X[j] for j in range(i, i+8)]; Y1 = [Y[j] for j in range(i, i+8)] 
+			X2 = [X[j] for j in range(i+8, i+16)]; Y2 = [Y[j] for j in range(i+8, i+16)]
 
 			(m1, c1, _, _, _) = stats.linregress(X1, Y1)
 			(m2, c2, _, _, _) = stats.linregress(X2, Y2)
@@ -102,12 +102,12 @@ def meta(X, Y, LBL):
 	Node_meta = []
 	st = end = 0
 
-	for i in xrange(1, len(LBL)):
+	for i in range(1, len(LBL)):
 		if LBL[i] == LBL[i-1]:
 			end = i
 			continue
 
-		mid = st + (end - st)/2
+		mid = int(st + (end - st)/2)
 		
 		if (LBL[mid] == 1):
 			# Hack : Ending long corridor
@@ -165,7 +165,7 @@ def drawTheta(Node_meta, thetas):
 def draw(X, Y, LBL):
 	X0 = []; Y0 = []; X1 = []; Y1 = []; X2 = []; Y2 =[]; X3 = []; Y3 = [];
 	
-	for i in xrange(len(LBL)):
+	for i in range(len(LBL)):
 		if LBL[i] == 0:
 			X0.append(X[i])
 			Y0.append(Y[i])
@@ -300,7 +300,7 @@ def manh(Node_meta, thetas):
 	leng = ((x[0]-x[1])**2 + (y[0]-y[1])**2)**(0.5)
 
 	# print("Total theta: ", accTheta, "Length: ", leng)
-	for i in xrange(1, len(Node_meta)):
+	for i in range(1, len(Node_meta)):
 		line = Node_meta[i]
 		x = [line[0], line[2]]; y = [line[1], line[3]]
 		leng = ((x[0]-x[1])**2 + (y[0]-y[1])**2)**(0.5)
@@ -350,8 +350,7 @@ def extManh(Nodes_manh):
 			b1 = b2
 			l2 = l1 + mag*math.cos(math.radians(theta))
 			b2 = b1 + mag*math.sin(math.radians(theta))
-			Nodes.append((l1, b1, l2, b2, lbl, stPose, endPose))
-			
+			Nodes.append((l1, b1, l2, b2, lbl, stPose, endPose))			
 		else:
 			l1 = l2
 			b1 = b2
@@ -364,7 +363,32 @@ def extManh(Nodes_manh):
 			
 		i = i+1
 
-	return Nodes
+	NodesN = []; i = 0
+	l1 = 0; b1 = 0; l2 = 0; b2 = 0;
+	for line in Nodes_manh:
+		mag = line[0]; theta = line[1]; lbl = line[2]; stPose = line[3]; endPose = line[4]
+		
+		if((theta - Nodes_manh[i-1][1] == 180) and (i != 0)):
+			l1 = l2 - 0.2
+			b1 = b2 + 0.2
+			# l1 = l2
+			# b1 = b2
+			l2 = l1 + mag*math.cos(math.radians(theta))
+			b2 = b1 + mag*math.sin(math.radians(theta))
+			NodesN.append((l1, b1, l2, b2, lbl, stPose, endPose))			
+		else:
+			l1 = l2
+			b1 = b2
+			l2 = l1 + mag*math.cos(math.radians(theta))
+			b2 = b1 + mag*math.sin(math.radians(theta))
+
+			# if((lbl == 0) and (abs(b1-b2) < 0.25)):
+			# 	continue
+			NodesN.append((l1, b1, l2, b2, lbl, stPose, endPose))
+			
+		i = i+1
+
+	return Nodes, NodesN
 
 
 def writeMlp(Nodes, dense=True):
@@ -535,18 +559,18 @@ def startPose(X, Y, THETA, LBL):
 	
 	Nodes_manh = manh(Node_meta, thetas)
 	
-	Nodes = extManh(Nodes_manh)
+	Nodes, NodesN = extManh(Nodes_manh)
 	drawManh(Nodes)
 
-	writeMlp(Nodes, True)
+	# writeMlp(Nodes, False)
 
 	poses = getConstr(Nodes_manh, Nodes)
 	# drawConstr(poses)
 
 	icpId = getIcpId(poses, LBL)
-	writeIcp(icpId)
+	# writeIcp(icpId)
 
-	return (poses, icpId)
+	return (poses, NodesN)
 
 
 if __name__ == '__main__':

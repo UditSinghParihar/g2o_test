@@ -430,10 +430,10 @@ def extManh(Nodes_manh):
 		mag = line[0]; theta = line[1]; lbl = line[2]; stPose = line[3]; endPose = line[4]
 		
 		if((theta - Nodes_manh[i-1][1] == 180) and (i != 0)):
-			# l1 = l2 + 0.01
-			l1 = l2
-			# b1 = b2
-			b1 = b2 + 0.05
+			l1 = l2 - 0.2
+			b1 = b2 + 0.2
+			# l1 = l2
+			# b1 = b2 + 0.05
 			l2 = l1 + mag*math.cos(math.radians(theta))
 			b2 = b1 + mag*math.sin(math.radians(theta))
 			# if((lbl == 0) and (abs(b1-b2) < 0.25)):
@@ -475,6 +475,34 @@ def writeMlp(Nodes, dense=True):
 
 	poses.close()
 	densePoses.close()
+
+
+def start(X, Y, THETA, LBL):
+	draw(X, Y, LBL)
+
+	Node_meta = meta(X, Y, LBL)
+	Node_meta = outRemove(Node_meta)
+	# drawMeta(Node_meta)
+
+	Nodes = []
+
+	thetas = []
+	for line in Node_meta:
+		lbl = line[4]
+		x = [line[0], line[2]]
+		y = [line[1], line[3]]
+
+		theta = calcTheta(x[0], x[1], y[0], y[1])
+		thetas.append(theta)
+	# drawTheta(Node_meta, thetas)
+	
+	Nodes_manh = manh(Node_meta, thetas)
+	Nodes = extManh(Nodes_manh)
+	drawManh(Nodes)
+
+	writeMlp(Nodes, dense=False)
+
+	return Nodes
 
 
 if __name__ == '__main__':
