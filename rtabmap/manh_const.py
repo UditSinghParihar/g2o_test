@@ -5,7 +5,7 @@ import numpy as np
 from scipy import stats
 
 
-def read(fileName):
+def readG2o(fileName):
 	f = open(fileName, 'r')
 	A = f.readlines()
 	f.close()
@@ -13,16 +13,86 @@ def read(fileName):
 	X = []
 	Y = []
 	THETA = []
-	LBL = []
 
 	for line in A:
-		(x, y, theta, lbl) = line.split(' ')
-		X.append(float(x))
-		Y.append(float(y))
-		THETA.append(float(theta))
-		LBL.append(int(lbl.rstrip('\n')))
+		if "VERTEX_SE2" in line:
+			(ver, ind, x, y, theta) = line.split(' ')
+			X.append(float(x))
+			Y.append(float(y))
+			THETA.append(float(theta.rstrip('\n')))
 
-	return X, Y, THETA, LBL
+	X_temp = X
+	Y_temp = Y
+	X = [y for y in Y_temp]
+	Y = [-x for x in X_temp]
+	
+	return (X, Y, THETA)
+
+
+def readKitti(fileName):
+	f = open(fileName, 'r')
+	A = f.readlines()
+	f.close()
+
+	X = []
+	Y = []
+	THETA = []
+
+	for line in A:
+		l = line.split(' ')
+		
+		x = float(l[3]); y = float(l[7]); theta = math.atan2(float(l[4]), float(l[0]))
+		
+		X.append(x)
+		Y.append(y)
+		THETA.append(theta)
+
+	return (X, Y, THETA)
+
+
+def readLabels(fileName):
+	f = open(fileName, 'r')
+	A = f.readlines()
+	f.close()
+
+	for i, lbl in enumerate(A):
+		lbl = lbl.rstrip('\n')
+		if(lbl == 'Rackspace'):
+			A[i] = 0
+		elif(lbl == 'Corridor'):
+			A[i] = 1
+		elif(lbl == 'Transition'):
+			A[i] = 2
+
+	return A
+
+
+def draw(X, Y, LBL):
+	X0 = []; Y0 = []; X1 = []; Y1 = []; X2 = []; Y2 =[];
+	
+	for i in xrange(len(LBL)):
+		if LBL[i] == 0:
+			X0.append(X[i])
+			Y0.append(Y[i])
+
+		elif LBL[i] == 1:
+			X1.append(X[i])
+			Y1.append(Y[i])
+
+		elif LBL[i] == 2:
+			X2.append(X[i])
+			Y2.append(Y[i])
+
+	fig = plt.figure()
+	ax = plt.subplot(111)
+
+	ax.plot(X0, Y0, 'ro', label='Rackspace')
+	ax.plot(X1, Y1, 'bo', label='Corridor')
+	ax.plot(X2, Y2, 'go', label='Transition')
+	plt.plot(X, Y, 'k-')
+
+	plt.legend()
+	plt.show()
 
 
 def blueFix(st, end, X, Y, LBL, Node_meta):
@@ -95,100 +165,6 @@ def meta(X, Y, LBL):
 	return Node_meta
 
 
-def drawTheta(Node_meta, thetas):
-	ax = plt.subplot(1,1,1)
-
-	i = 0
-	for line in Node_meta:
-		
-		lbl = line[4]
-		x = [line[0], line[2]]
-		y = [line[1], line[3]]
-
-		x2 = math.cos(thetas[i]) + x[0]
-		y2 = math.sin(thetas[i]) + y[0]
-		plt.plot([x[0], x2], [y[0], y2], 'm->')
-
-		if lbl == 0:
-			ax.plot(x, y, 'ro')
-			ax.plot(x, y, 'r-')
-
-		elif lbl == 1:
-			ax.plot(x, y, 'bo')
-			ax.plot(x, y, 'b-')
-
-		elif lbl == 2:
-			ax.plot(x, y, 'go')
-			ax.plot(x, y, 'g-')
-
-		elif lbl == 3:
-			ax.plot(x, y, 'yo')
-			ax.plot(x, y, 'y-')
-
-		i = i+1
-
-	plt.show()
-
-
-def draw(X, Y, LBL):
-	X0 = []; Y0 = []; X1 = []; Y1 = []; X2 = []; Y2 =[]; X3 = []; Y3 = [];
-	
-	for i in xrange(len(LBL)):
-		if LBL[i] == 0:
-			X0.append(X[i])
-			Y0.append(Y[i])
-
-		elif LBL[i] == 1:
-			X1.append(X[i])
-			Y1.append(Y[i])
-
-		elif LBL[i] == 2:
-			X2.append(X[i])
-			Y2.append(Y[i])
-
-		elif LBL[i] == 3:
-			X3.append(X[i])
-			Y3.append(Y[i])
-
-	fig = plt.figure()
-	ax = plt.subplot(111)
-
-	ax.plot(X0, Y0, 'ro', label='Rackspace')
-	ax.plot(X1, Y1, 'bo', label='Corridor')
-	ax.plot(X2, Y2, 'go', label='Trisection')
-	ax.plot(X3, Y3, 'yo', label='Intersection')
-	plt.plot(X, Y, 'k-')
-
-	plt.show()
-
-
-def drawManh(Nodes):
-	ax = plt.subplot(1,1,1)
-
-	for line in Nodes:
-		lbl = line[4]
-		x = [line[0], line[2]]
-		y = [line[1], line[3]]
-
-		if lbl == 0:
-			ax.plot(x, y, 'ro')
-			ax.plot(x, y, 'r-')
-
-		elif lbl == 1:
-			ax.plot(x, y, 'bo')
-			ax.plot(x, y, 'b-')
-
-		elif lbl == 2:
-			ax.plot(x, y, 'go')
-			ax.plot(x, y, 'g-')
-
-		elif lbl == 3:
-			ax.plot(x, y, 'yo')
-			ax.plot(x, y, 'y-')
-
-	plt.show()
-
-
 def drawMeta(Node_meta):
 	ax = plt.subplot(1,1,1)
 
@@ -210,10 +186,6 @@ def drawMeta(Node_meta):
 		elif lbl == 2:
 			ax.plot(x, y, 'go')
 			ax.plot(x, y, 'g-')
-
-		elif lbl == 3:
-			ax.plot(x, y, 'yo')
-			ax.plot(x, y, 'y-')
 
 		i = i+1
 
@@ -256,6 +228,38 @@ def calcTheta(x1, x2, y1, y2):
 	return theta
 
 
+def drawTheta(Node_meta, thetas):
+	ax = plt.subplot(1,1,1)
+
+	i = 0
+	for line in Node_meta:
+		
+		lbl = line[4]
+		x = [line[0], line[2]]
+		y = [line[1], line[3]]
+
+		x2 = math.cos(thetas[i]) + x[0]
+		y2 = math.sin(thetas[i]) + y[0]
+		plt.plot([x[0], x2], [y[0], y2], 'm->')
+
+		if lbl == 0:
+			ax.plot(x, y, 'ro')
+			ax.plot(x, y, 'r-')
+
+		elif lbl == 1:
+			ax.plot(x, y, 'bo')
+			ax.plot(x, y, 'b-')
+
+		elif lbl == 2:
+			ax.plot(x, y, 'go')
+			ax.plot(x, y, 'g-')
+
+		i = i+1
+
+	plt.axis('scaled')
+	plt.show()
+
+
 def getPositve(ang):
 	if(ang < 0):
 		ang += 360
@@ -292,7 +296,7 @@ def manh(Node_meta, thetas):
 			elif((delTheta > 225 and delTheta < 315) or (delTheta < -38 and delTheta > -135)):
 				binTheta = 270
 		elif(line[4] == 0):
-			if((delTheta > 0 and delTheta < 45) or (delTheta > 315 and delTheta < 360) or (delTheta < 0 and delTheta > -51) or (delTheta < -315 and delTheta > -360)):
+			if((delTheta > 0 and delTheta < 45) or (delTheta > 315 and delTheta < 360) or (delTheta < 0 and delTheta > -45) or (delTheta < -315 and delTheta > -360)):
 				binTheta = 0
 			elif((delTheta > 45 and delTheta < 135) or (delTheta < -225 and delTheta > -315)):
 				binTheta = 90
@@ -310,9 +314,16 @@ def manh(Node_meta, thetas):
 			elif((delTheta > 225 and delTheta < 315) or (delTheta < -45 and delTheta > -135)):
 				binTheta = 270
 
+		# Custom Hack
+		if(i == 20): binTheta = 0
+		if(i == 24): binTheta = 90
+		if(i == 31): binTheta = 270
+		if(i == 95): binTheta = 270
+
 		accTheta += binTheta
 		Nodes.append((leng, accTheta, line[4], line[5], line[6]))
 		# print("Delta theta: ", delTheta, "Binned to: ", binTheta, "Total theta: ", accTheta, "Length: ", leng, "Label: ", line[4], "Cur. Angle: ", curAng, "Pre. Angle: ", prevAng)
+		# print("Node id: ", i, "Delta theta: ", delTheta, "Binned to: ", binTheta, "Label: ", line[4])
 
 	return Nodes
 
@@ -342,6 +353,29 @@ def extManh(Nodes_manh):
 		i = i+1
 
 	return Nodes
+
+
+def drawManh(Nodes):
+	ax = plt.subplot(1,1,1)
+
+	for line in Nodes:
+		lbl = line[4]
+		x = [line[0], line[2]]
+		y = [line[1], line[3]]
+
+		if lbl == 0:
+			ax.plot(x, y, 'ro')
+			ax.plot(x, y, 'r-')
+
+		elif lbl == 1:
+			ax.plot(x, y, 'bo')
+			ax.plot(x, y, 'b-')
+
+		elif lbl == 2:
+			ax.plot(x, y, 'go')
+			ax.plot(x, y, 'g-')
+
+	plt.show()
 
 
 def writeMlp(Nodes, dense=True):
@@ -384,83 +418,12 @@ def getConstr(Nodes_manh, Nodes):
 	return poses
 
 
-def drawConstr(poses):
-	poses = np.asarray(poses)
-	
-	ax = plt.subplot(111)
+def startPoses(X, Y, THETA, lbls):
+	draw(X, Y, lbls)
 
-	for i in range(len(poses)):
-		x = poses[i, 0]; y = poses[i, 1]; theta = poses[i, 2]
-
-		x2 = math.cos(theta) + x
-		y2 = math.sin(theta) + y
-		plt.plot([x, x2], [y, y2], 'm->')
-
-	ax.plot(poses[:, 0], poses[:, 1], 'ro')
-	plt.plot(poses[:, 0], poses[:, 1], 'k-')
-
-	plt.show()
-
-
-def getIcpId(poses, LBL):
-	fill = np.zeros((len(poses), len(poses)))
-	icp = []
-
-	for i in range(len(poses)):
-		minDist = 10000; idi = -1; idj = -1; denseIdi = -1; denseIdj = -1
-		thres = 1.9
-
-		line = poses[i]
-		x1 = line[0]; y1 = line[1]; denseId1 = line[3]; theta1 = line[2]; lbl1 = LBL[denseId1]
-		
-		if(lbl1 == 1):
-			for j in range(len(poses)):
-				lbl2 = LBL[poses[j][3]]; theta2 = poses[j][2]
-
-				a = np.array([math.cos(theta1), math.sin(theta1)]).reshape(2, 1)
-				b = np.array([math.cos(theta2), math.sin(theta2)]).reshape(2, 1)
-				# print(np.dot(a.T, b))
-
-				if((fill[i, j] == 1) or (fill[j, i] == 1) or (i == j) or (lbl2 != 1) or (np.dot(a.T, b) != 1)):
-					continue
-				else:
-					line = poses[j]
-					x2 = line[0]; y2 = line[1]; denseId2 = line[3]; theta2 = line[2]; lbl2 = LBL[denseId2]
-					
-					dist = np.sqrt((x1-x2)**2 + (y1-y2)**2)
-				
-					if(dist < minDist):
-						minDist = dist; idi = i; idj = j; denseIdi = denseId1; denseIdj = denseId2
-
-					fill[i, j] = 1; fill[j, i] = 1
-
-			if(minDist < thres):
-				# print(minDist, idi, idj)
-				icp.append((denseIdi, denseIdj))
-
-	return icp
-
-
-def writeIcp(icp):
-	poses = open("icp.txt", 'w')
-
-	for i in range(len(icp)):
-		info = str(icp[i][0]) + " " + str(icp[i][1]) + "\n"
-		poses.write(info)
-
-	poses.close()
-
-
-def startPoses(X, Y, THETA, LBL):
-	# (X, Y, THETA, LBL) = read(fileName)
-	
-	# X = X[0:1500]; Y = Y[0:1500]; LBL = LBL[0:1500]
-	# print(len(X))
-	draw(X, Y, LBL)
-
-	Node_meta = meta(X, Y, LBL)
+	Node_meta = meta(X, Y, lbls)
 	Node_meta = outRemove(Node_meta)
-	drawMeta(Node_meta)
+	# drawMeta(Node_meta)
 
 	Nodes = []
 
@@ -473,7 +436,7 @@ def startPoses(X, Y, THETA, LBL):
 		theta = calcTheta(x[0], x[1], y[0], y[1])
 		thetas.append(theta)
 	# drawTheta(Node_meta, thetas)
-	
+
 	Nodes_manh = manh(Node_meta, thetas)
 	
 	Nodes = extManh(Nodes_manh)
@@ -482,17 +445,14 @@ def startPoses(X, Y, THETA, LBL):
 	writeMlp(Nodes, True)
 
 	poses = getConstr(Nodes_manh, Nodes)
-	# drawConstr(poses)
 
-	icpId = getIcpId(poses, LBL)
-	# print(icpId)
-	# writeIcp(icpId)
-	
-	return (poses, icpId)
+	return poses
 
 
 if __name__ == '__main__':
-	fileName = str(argv[1])
+	(X, Y, THETA) = readKitti(argv[1])
+	lbls = readLabels(argv[2])
+	# lmt = 850	# 1054
+	# X = X[0:lmt]; Y = Y[0:lmt]; THETA = THETA[0:lmt]; lbls = lbls[0:lmt]
 
-	X, Y, THETA, LBL = read(fileName)
-	poses = startPoses(X, Y, THETA, LBL)
+	startPoses(X, Y, THETA, lbls)

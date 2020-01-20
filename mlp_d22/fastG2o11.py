@@ -111,7 +111,7 @@ def draw(X, Y, LBL):
 
 
 def writeG2O(X_meta, Y_meta, THETA_meta, poses, mlpN, iPoses, icpId):
-	g2o = open('/run/user/1000/gvfs/sftp:host=ada.iiit.ac.in,user=udit/home/udit/share/lessNoise.g2o', 'w')
+	g2o = open('/run/user/1000/gvfs/sftp:host=10.2.138.226,user=udit/home/udit/backup/lessNoise.g2o', 'w')
 	
 	for i, (x, y, theta) in enumerate(zip(X_meta,Y_meta,THETA_meta)):
 		line = "VERTEX_SE2 " + str(i) + " " + str(x) + " " + str(y) + " " + str(theta)
@@ -137,27 +137,27 @@ def writeG2O(X_meta, Y_meta, THETA_meta, poses, mlpN, iPoses, icpId):
 		g2o.write("\n")
 
 	# Manhattan constraints
-	g2o.write("# Manhattan constraints")
-	g2o.write("\n")
-	info_mat = "300.0 0.0 0.0 300.0 0.0 700.0"
+	# g2o.write("# Manhattan constraints")
+	# g2o.write("\n")
+	# info_mat = "300.0 0.0 0.0 300.0 0.0 700.0"
 
-	for i in range(1, len(poses), 6):
-	# for i in range(1, 80, 3):
-	# for i in range(1, len(poses)):
-		p1 = (poses[0, 0], poses[0, 1], poses[0, 2])
-		p2 = (poses[i, 0], poses[i, 1], poses[i, 2])
-		startId = int(poses[0, 3]); denseId = int(poses[i, 3])
+	# for i in range(1, len(poses), 6):
+	# # for i in range(1, 80, 3):
+	# # for i in range(1, len(poses)):
+	# 	p1 = (poses[0, 0], poses[0, 1], poses[0, 2])
+	# 	p2 = (poses[i, 0], poses[i, 1], poses[i, 2])
+	# 	startId = int(poses[0, 3]); denseId = int(poses[i, 3])
 
-		T1_w = np.array([[math.cos(p1[2]), -math.sin(p1[2]), p1[0]], [math.sin(p1[2]), math.cos(p1[2]), p1[1]], [0, 0, 1]])
-		T2_w = np.array([[math.cos(p2[2]), -math.sin(p2[2]), p2[0]], [math.sin(p2[2]), math.cos(p2[2]), p2[1]], [0, 0, 1]])
-		T2_1 = np.dot(np.linalg.inv(T1_w), T2_w)
-		del_x = str(T2_1[0][2])
-		del_y = str(T2_1[1][2])
-		del_theta = str(math.atan2(T2_1[1, 0], T2_1[0, 0]))
+	# 	T1_w = np.array([[math.cos(p1[2]), -math.sin(p1[2]), p1[0]], [math.sin(p1[2]), math.cos(p1[2]), p1[1]], [0, 0, 1]])
+	# 	T2_w = np.array([[math.cos(p2[2]), -math.sin(p2[2]), p2[0]], [math.sin(p2[2]), math.cos(p2[2]), p2[1]], [0, 0, 1]])
+	# 	T2_1 = np.dot(np.linalg.inv(T1_w), T2_w)
+	# 	del_x = str(T2_1[0][2])
+	# 	del_y = str(T2_1[1][2])
+	# 	del_theta = str(math.atan2(T2_1[1, 0], T2_1[0, 0]))
 		
-		line = "EDGE_SE2 "+str(startId)+" "+str(denseId)+" "+del_x+" "+del_y+" "+del_theta+" "+info_mat
-		g2o.write(line)
-		g2o.write("\n")
+	# 	line = "EDGE_SE2 "+str(startId)+" "+str(denseId)+" "+del_x+" "+del_y+" "+del_theta+" "+info_mat
+	# 	g2o.write(line)
+	# 	g2o.write("\n")
 
 	# Removing rotation of 1st corridor
 	# for i in range(1, 20):
@@ -176,48 +176,47 @@ def writeG2O(X_meta, Y_meta, THETA_meta, poses, mlpN, iPoses, icpId):
 	# 	g2o.write(line)
 	# 	g2o.write("\n")
 
-	# # MLP Manhattan constraints
-	# g2o.write("\n# MLP Manhattan constraints\n\n")
-	# # g2o.write("\n")
-	# info_mat = "300.0 0.0 0.0 300.0 0.0 700.0"
-	# for i in range(len(mlpN)):
-	# 	n1 = mlpN[i][1]; n2 = mlpN[i][0]
-	# 	s1 = 2*n1; s2 = s1+1; t1 = 2*n2; t2 = t1+1  
+	# MLP Manhattan constraints
+	g2o.write("\n# MLP Manhattan constraints\n\n")
+	info_mat = "300.0 0.0 0.0 300.0 0.0 700.0"
+	for i in range(len(mlpN)):
+		n1 = mlpN[i][1]; n2 = mlpN[i][0]
+		s1 = 2*n1; s2 = s1+1; t1 = 2*n2; t2 = t1+1  
 		
-	# 	# s1 -> t1; s1 -> t2; s2 -> t1; s2 -> t2
-	# 	pairs = [(s1, t1), (s1, t2), (s2, t1), (s2, t2)]
+		# s1 -> t1; s1 -> t2; s2 -> t1; s2 -> t2
+		pairs = [(s1, t1), (s1, t2), (s2, t1), (s2, t2)]
 		
-	# 	for j in range(len(pairs)):
-	# 		e1 = pairs[j][0]; e2 = pairs[j][1]
+		for j in range(len(pairs)):
+			e1 = pairs[j][0]; e2 = pairs[j][1]
 
-	# 		p1 = (poses[e1, 0], poses[e1, 1], poses[e1, 2])
-	# 		p2 = (poses[e2, 0], poses[e2, 1], poses[e2, 2])
-	# 		startId = int(poses[e1, 3]); denseId = int(poses[e2, 3])
+			p1 = (poses[e1, 0], poses[e1, 1], poses[e1, 2])
+			p2 = (poses[e2, 0], poses[e2, 1], poses[e2, 2])
+			startId = int(poses[e1, 3]); denseId = int(poses[e2, 3])
 
-	# 		T1_w = np.array([[math.cos(p1[2]), -math.sin(p1[2]), p1[0]], [math.sin(p1[2]), math.cos(p1[2]), p1[1]], [0, 0, 1]])
-	# 		T2_w = np.array([[math.cos(p2[2]), -math.sin(p2[2]), p2[0]], [math.sin(p2[2]), math.cos(p2[2]), p2[1]], [0, 0, 1]])
-	# 		T2_1 = np.dot(np.linalg.inv(T1_w), T2_w)
-	# 		del_x = str(T2_1[0][2])
-	# 		del_y = str(T2_1[1][2])
-	# 		del_theta = str(math.atan2(T2_1[1, 0], T2_1[0, 0]))
+			T1_w = np.array([[math.cos(p1[2]), -math.sin(p1[2]), p1[0]], [math.sin(p1[2]), math.cos(p1[2]), p1[1]], [0, 0, 1]])
+			T2_w = np.array([[math.cos(p2[2]), -math.sin(p2[2]), p2[0]], [math.sin(p2[2]), math.cos(p2[2]), p2[1]], [0, 0, 1]])
+			T2_1 = np.dot(np.linalg.inv(T1_w), T2_w)
+			del_x = str(T2_1[0][2])
+			del_y = str(T2_1[1][2])
+			del_theta = str(math.atan2(T2_1[1, 0], T2_1[0, 0]))
 			
-	# 		line = "EDGE_SE2 "+str(startId)+" "+str(denseId)+" "+del_x+" "+del_y+" "+del_theta+" "+info_mat+"\n"
-	# 		g2o.write(line)
+			line = "EDGE_SE2 "+str(startId)+" "+str(denseId)+" "+del_x+" "+del_y+" "+del_theta+" "+info_mat+"\n"
+			g2o.write(line)
 
 	# ICP constraints
-	g2o.write("# ICP constraints")
-	g2o.write("\n")
-	info_mat = "700.0 0.0 0.0 700.0 0.0 700.0"
+	# g2o.write("# ICP constraints")
+	# g2o.write("\n")
+	# info_mat = "700.0 0.0 0.0 700.0 0.0 700.0"
 
-	for i in range(icpId.shape[0]):
-		x = iPoses[i, 0]; y = iPoses[i, 1]; theta = iPoses[i, 2]; frame1 = icpId[i, 0]; frame2 = icpId[i, 1]
+	# for i in range(icpId.shape[0]):
+	# 	x = iPoses[i, 0]; y = iPoses[i, 1]; theta = iPoses[i, 2]; frame1 = icpId[i, 0]; frame2 = icpId[i, 1]
 
-		if(frame1 == frame2):
-			continue
+	# 	if(frame1 == frame2):
+	# 		continue
 
-		line = "EDGE_SE2 "+str(frame1)+" "+str(frame2)+" "+str(x)+" "+str(y)+" "+str(theta)+" "+info_mat
-		g2o.write(line)
-		g2o.write("\n")
+	# 	line = "EDGE_SE2 "+str(frame1)+" "+str(frame2)+" "+str(x)+" "+str(y)+" "+str(theta)+" "+info_mat
+	# 	g2o.write(line)
+	# 	g2o.write("\n")
 
 	g2o.write("FIX 0")
 	g2o.write("\n")

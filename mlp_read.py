@@ -4,6 +4,7 @@
 
 from sys import argv, exit
 import matplotlib.pyplot as plt
+import numpy as np
 
 
 def read(fileName):
@@ -56,8 +57,17 @@ def drawNode(Node_meta):
 	plt.show()
 
 
+def printNodes(Node_meta):
+	np.set_printoptions(precision=6)
+	np.set_printoptions(suppress=True)
+	Node_meta = np.array(Node_meta)
+	print repr(Node_meta)
+
+
 if __name__ == '__main__':
 	fileName = str(argv[1])
 	Node_meta = read(fileName)
 
 	drawNode(Node_meta)
+
+	# printNodes(Node_meta)
