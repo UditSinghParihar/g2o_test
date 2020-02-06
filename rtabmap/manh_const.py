@@ -336,6 +336,8 @@ def extManh(Nodes_manh):
 		mag = line[0]; theta = line[1]; lbl = line[2]; stPose = line[3]; endPose = line[4]
 		
 		if((theta - Nodes_manh[i-1][1] == 180) and (i != 0)):
+			# l1 = l2 - 0.1
+			# b1 = b2 + 0.1
 			l1 = l2 
 			b1 = b2 
 			l2 = l1 + mag*math.cos(math.radians(theta))
@@ -440,9 +442,9 @@ def startPoses(X, Y, THETA, lbls):
 	Nodes_manh = manh(Node_meta, thetas)
 	
 	Nodes = extManh(Nodes_manh)
-	drawManh(Nodes)
+	# drawManh(Nodes)
 
-	writeMlp(Nodes, True)
+	# writeMlp(Nodes, True)
 
 	poses = getConstr(Nodes_manh, Nodes)
 

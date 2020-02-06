@@ -3,8 +3,32 @@ import matplotlib.pyplot as plt
 import math
 import numpy as np
 import os
+import csv
 
 from manh_const import startPoses, draw
+
+
+def readCsv(fileName):
+	pairs = []
+	with open(fileName, 'rt') as f:
+		A = csv.reader(f)
+
+		for line in A:
+			pair = []
+			
+			pair.append(float(line[0]))
+			
+			if line[1] == 's': pair.append(0)
+			else: pair.append(1)
+			
+			pair.append(float(line[2]))
+			
+			if line[3] == 's': pair.append(0)
+			else: pair.append(1)
+
+			pairs.append(pair)
+
+	return pairs
 
 
 def readKitti(fileName):
@@ -165,6 +189,8 @@ if __name__ == '__main__':
 	poses = np.asarray(poses)
 
 	mlpN = readMLPOut(argv[3])
+
+	frtLoop = readCsv(argv[4])
 
 	writeG2O(X, Y, THETA, poses, mlpN)
 
