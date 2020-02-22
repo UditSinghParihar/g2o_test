@@ -176,11 +176,11 @@ if __name__ == '__main__':
 	# X2 = X2[0:2800]; Y2 = Y2[0:2800]
 	# X3 = X3[0:2800]; Y3 = Y3[0:2800]
 
-	# draw(X1, Y1, X2, Y2, X3, Y3, opt=False)
+	draw(X1, Y1, X2, Y2, X3, Y3, opt=False)
 	# draw(X1, Y1, X2, Y2, X3, Y3, noisy=False, gt=False)
 	# draw(X1, Y1, X2, Y2, X3, Y3)
-	draw(X1, Y1, X2, Y2, X3, Y3, noisy=False)
+	# draw(X1, Y1, X2, Y2, X3, Y3, noisy=False)
 
-	draw(X1, Y1, X2, Y2, X3, Y3, opt=False, gt=False)
-	draw(X1, Y1, X2, Y2, X3, Y3, noisy=False, gt=False)
-	draw(X1, Y1, X2, Y2, X3, Y3, noisy=False, opt=False)
+	# draw(X1, Y1, X2, Y2, X3, Y3, opt=False, gt=False)
+	# draw(X1, Y1, X2, Y2, X3, Y3, noisy=False, gt=False)
+	# draw(X1, Y1, X2, Y2, X3, Y3, noisy=False, opt=False)

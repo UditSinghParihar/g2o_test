@@ -5,68 +5,7 @@ import numpy as np
 import os
 import csv
 
-from manh_const import startPoses, draw
-
-
-# def readCsv(fileName):
-# 	pairs = []
-# 	with open(fileName, 'rt') as f:
-# 		A = csv.reader(f)
-
-# 		for line in A:
-# 			pair = []
-			
-# 			pair.append(float(line[0]))
-			
-# 			if line[1] == 's': pair.append(0)
-# 			else: pair.append(1)
-			
-# 			pair.append(float(line[2]))
-			
-# 			if line[3] == 's': pair.append(0)
-# 			else: pair.append(1)
-
-# 			pairs.append(pair)
-
-# 	return pairs
-
-
-def readKitti(fileName):
-	f = open(fileName, 'r')
-	A = f.readlines()
-	f.close()
-
-	X = []
-	Y = []
-	THETA = []
-
-	for line in A:
-		l = line.split(' ')
-		
-		x = float(l[3]); y = float(l[7]); theta = math.atan2(float(l[4]), float(l[0]))
-		
-		X.append(x)
-		Y.append(y)
-		THETA.append(theta)
-
-	return (X, Y, THETA)
-
-
-def readLabels(fileName):
-	f = open(fileName, 'r')
-	A = f.readlines()
-	f.close()
-
-	for i, lbl in enumerate(A):
-		lbl = lbl.rstrip('\n')
-		if(lbl == 'Rackspace'):
-			A[i] = 0
-		elif(lbl == 'Corridor'):
-			A[i] = 1
-		elif(lbl == 'Transition'):
-			A[i] = 2
-
-	return A
+from manh_const14 import startPoses, draw, read
 
 
 def readMLPOut(fileName):
@@ -149,12 +88,12 @@ def writeG2O(X, Y, THETA, poses, mlpN):
 			del_x = str(T2_1[0][2])
 			del_y = str(T2_1[1][2])
 			del_theta = str(math.atan2(T2_1[1, 0], T2_1[0, 0]))
-			
+
 			line = "EDGE_SE2 "+str(startId)+" "+str(endId)+" "+del_x+" "+del_y+" "+del_theta+" "+info_mat+"\n"
 			g2o.write(line)
 
 	g2o.write("FIX 0\n")
-	g2o.close()	
+	g2o.close()
 
 
 def optimize():
@@ -182,18 +121,15 @@ def readG2o(fileName):
 
 
 if __name__ == '__main__':
-	(X, Y, THETA) = readKitti(argv[1])
-	lbls = readLabels(argv[2])
+	X, Y, THETA, LBL = read(argv[1])
 
-	poses = startPoses(X, Y, THETA, lbls)
+	poses = startPoses(X, Y, THETA, LBL)
 	poses = np.asarray(poses)
 
-	mlpN = readMLPOut(argv[3])
-
-	# frtLoop = readCsv(argv[4])
+	mlpN = readMLPOut(argv[2])
 
 	writeG2O(X, Y, THETA, poses, mlpN)
 
 	optimize()
 	(xOpt, yOpt, tOpt) = readG2o("opt.g2o")
-	draw(xOpt, yOpt, lbls)
+	draw(xOpt, yOpt, LBL)

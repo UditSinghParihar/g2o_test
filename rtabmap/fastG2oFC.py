@@ -8,27 +8,30 @@ import csv
 from manh_const import startPoses, draw
 
 
-# def readCsv(fileName):
-# 	pairs = []
-# 	with open(fileName, 'rt') as f:
-# 		A = csv.reader(f)
+def readCsv(fileName):
+	pairs = []
+	with open(fileName, 'rt') as f:
+		A = csv.reader(f)
 
-# 		for line in A:
-# 			pair = []
+		for line in A:
+			pair = []
 			
-# 			pair.append(float(line[0]))
+			pair.append(int(line[2])-1)
 			
-# 			if line[1] == 's': pair.append(0)
-# 			else: pair.append(1)
+			if line[3] == 's': pair.append(0)
+			else: pair.append(1)
 			
-# 			pair.append(float(line[2]))
+			pair.append(int(line[0])-1)
 			
-# 			if line[3] == 's': pair.append(0)
-# 			else: pair.append(1)
+			if line[1] == 's': pair.append(0)
+			else: pair.append(1)
 
-# 			pairs.append(pair)
+			if(line[4] == 'x'): pair.append(0)
+			else: pair.append(1) 
 
-# 	return pairs
+			pairs.append(pair)
+
+	return pairs
 
 
 def readKitti(fileName):
@@ -82,7 +85,7 @@ def readMLPOut(fileName):
 	return mlpN
 
 
-def writeG2O(X, Y, THETA, poses, mlpN):
+def writeG2O(X, Y, THETA, poses, mlpN, frtLoop):
 	# g2o = open('/run/user/1000/gvfs/sftp:host=10.2.138.226,user=udit/home/udit/backup/lessNoise.g2o', 'w')
 	g2o = open('lessNoise.g2o', 'w')
 
@@ -149,9 +152,39 @@ def writeG2O(X, Y, THETA, poses, mlpN):
 			del_x = str(T2_1[0][2])
 			del_y = str(T2_1[1][2])
 			del_theta = str(math.atan2(T2_1[1, 0], T2_1[0, 0]))
-			
+
 			line = "EDGE_SE2 "+str(startId)+" "+str(endId)+" "+del_x+" "+del_y+" "+del_theta+" "+info_mat+"\n"
 			g2o.write(line)
+
+	# Corridor count constraints
+	g2o.write("\n# Corridor count constraints\n\n")
+	for line in frtLoop:
+		nStart, nTrg = line[0], line[2]
+		e1 = 2*nStart if(line[1] == 0) else 2*nStart + 1
+		e2 = 2*nTrg if(line[3] == 0) else 2*nTrg + 1
+
+		p1 = (poses[e1, 0], poses[e1, 1], poses[e1, 2])
+		p2 = (poses[e2, 0], poses[e2, 1], poses[e2, 2])
+		startId = int(poses[e1, 3]); endId = int(poses[e2, 3])
+
+		T1_w = np.array([[math.cos(p1[2]), -math.sin(p1[2]), p1[0]], [math.sin(p1[2]), math.cos(p1[2]), p1[1]], [0, 0, 1]])
+		T2_w = np.array([[math.cos(p2[2]), -math.sin(p2[2]), p2[0]], [math.sin(p2[2]), math.cos(p2[2]), p2[1]], [0, 0, 1]])
+		T2_1 = np.dot(np.linalg.inv(T1_w), T2_w)
+		
+		if(line[4] == 0):
+			del_x = str(0.01)
+			del_y = str(T2_1[1][2])
+			info_mat = "700.0 0.0 0.0 300.0 0.0 700.0"
+		elif(line[4] == 1):
+			del_x = str(T2_1[0][2])
+			del_y = str(0.01)
+			info_mat = "300.0 0.0 0.0 700.0 0.0 700.0"
+		
+		del_theta = str(math.atan2(T2_1[1, 0], T2_1[0, 0]))
+
+		line = "EDGE_SE2 "+str(startId)+" "+str(endId)+" "+del_x+" "+del_y+" "+del_theta+" "+info_mat+"\n"
+		g2o.write(line)
+
 
 	g2o.write("FIX 0\n")
 	g2o.close()	
@@ -190,9 +223,10 @@ if __name__ == '__main__':
 
 	mlpN = readMLPOut(argv[3])
 
-	# frtLoop = readCsv(argv[4])
+	frtLoop = readCsv(argv[4])
+	print(frtLoop)
 
-	writeG2O(X, Y, THETA, poses, mlpN)
+	writeG2O(X, Y, THETA, poses, mlpN, frtLoop)
 
 	optimize()
 	(xOpt, yOpt, tOpt) = readG2o("opt.g2o")

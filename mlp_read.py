@@ -70,4 +70,4 @@ if __name__ == '__main__':
 
 	drawNode(Node_meta)
 
-	# printNodes(Node_meta)
+	printNodes(Node_meta)

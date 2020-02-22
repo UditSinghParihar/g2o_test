@@ -3,9 +3,10 @@ import matplotlib.pyplot as plt
 import math
 import numpy as np
 from scipy import stats
+import csv
 
 
-def readG2o(fileName):
+def read(fileName):
 	f = open(fileName, 'r')
 	A = f.readlines()
 	f.close()
@@ -13,99 +14,22 @@ def readG2o(fileName):
 	X = []
 	Y = []
 	THETA = []
+	LBL = []
 
 	for line in A:
-		if "VERTEX_SE2" in line:
-			(ver, ind, x, y, theta) = line.split(' ')
-			X.append(float(x))
-			Y.append(float(y))
-			THETA.append(float(theta.rstrip('\n')))
+		(x, y, theta, lbl) = line.split(' ')
+		X.append(float(x))
+		Y.append(float(y))
+		THETA.append(math.radians(float(theta)))
+		LBL.append(int(lbl.rstrip('\n')))
 
-	X_temp = X
-	Y_temp = Y
-	X = [y for y in Y_temp]
-	Y = [-x for x in X_temp]
-	
-	return (X, Y, THETA)
-
-
-def readKitti(fileName):
-	f = open(fileName, 'r')
-	A = f.readlines()
-	f.close()
-
-	X = []
-	Y = []
-	THETA = []
-
-	for line in A:
-		l = line.split(' ')
-		
-		x = float(l[3]); y = float(l[7]); theta = math.atan2(float(l[4]), float(l[0]))
-		
-		X.append(x)
-		Y.append(y)
-		THETA.append(theta)
-
-	return (X, Y, THETA)
-
-
-def readLabels(fileName):
-	f = open(fileName, 'r')
-	A = f.readlines()
-	f.close()
-
-	for i, lbl in enumerate(A):
-		lbl = lbl.rstrip('\n')
-		if(lbl == 'Rackspace'):
-			A[i] = 0
-		elif(lbl == 'Corridor'):
-			A[i] = 1
-		elif(lbl == 'Transition'):
-			A[i] = 2
-
-	return A
+	return (X, Y, THETA, LBL)
 
 
 def draw(X, Y, LBL):
-	X0 = []; Y0 = []; X1 = []; Y1 = []; X2 = []; Y2 =[];
-	
-	for i in xrange(len(LBL)):
-		if LBL[i] == 0:
-			X0.append(X[i])
-			Y0.append(Y[i])
-
-		elif LBL[i] == 1:
-			X1.append(X[i])
-			Y1.append(Y[i])
-
-		elif LBL[i] == 2:
-			X2.append(X[i])
-			Y2.append(Y[i])
-
-	fig = plt.figure()
-	ax = plt.subplot(111)
-
-	ax.plot(X0, Y0, 'ro', label='Rackspace')
-	ax.plot(X1, Y1, 'bo', label='Corridor')
-	ax.plot(X2, Y2, 'go', label='Transition')
-	plt.plot(X, Y, 'k-')
-
-	plt.legend()
-	plt.show()
-
-
-def drawThetaPose(X, Y, LBL, thetas):
-	ax = plt.subplot(111)
-
 	X0 = []; Y0 = []; X1 = []; Y1 = []; X2 = []; Y2 =[]; X3 = []; Y3 = [];
 	
 	for i in xrange(len(LBL)):
-
-		x2 = 0.5 * math.cos(thetas[i]) + X[i]
-		y2 = 0.5 * math.sin(thetas[i]) + Y[i]
-		plt.plot([X[i], x2], [Y[i], y2], 'm->')
-
 		if LBL[i] == 0:
 			X0.append(X[i])
 			Y0.append(Y[i])
@@ -122,12 +46,13 @@ def drawThetaPose(X, Y, LBL, thetas):
 			X3.append(X[i])
 			Y3.append(Y[i])
 
+	fig = plt.figure()
+	ax = plt.subplot(111)
+
 	ax.plot(X0, Y0, 'ro', label='Rackspace')
 	ax.plot(X1, Y1, 'bo', label='Corridor')
 	ax.plot(X2, Y2, 'go', label='Trisection')
 	ax.plot(X3, Y3, 'yo', label='Intersection')
-
-	plt.plot(X, Y, 'k-')
 
 	plt.show()
 
@@ -352,10 +277,10 @@ def manh(Node_meta, thetas):
 				binTheta = 270
 
 		# Custom Hack
-		if(i == 20): binTheta = 0
-		if(i == 24): binTheta = 90
-		if(i == 31): binTheta = 270
-		if(i == 95): binTheta = 270
+		if(i == 91): binTheta = 270
+		if(i == 107): binTheta = 270
+		# if(i == 31): binTheta = 270
+		# if(i == 95): binTheta = 270
 
 		accTheta += binTheta
 		Nodes.append((leng, accTheta, line[4], line[5], line[6]))
@@ -373,10 +298,10 @@ def extManh(Nodes_manh):
 		mag = line[0]; theta = line[1]; lbl = line[2]; stPose = line[3]; endPose = line[4]
 		
 		if((theta - Nodes_manh[i-1][1] == 180) and (i != 0)):
-			# l1 = l2 - 0.1
-			# b1 = b2 + 0.1
-			l1 = l2 
-			b1 = b2 
+			l1 = l2 - 0.1
+			b1 = b2 + 0.1
+			# l1 = l2 
+			# b1 = b2 
 			l2 = l1 + mag*math.cos(math.radians(theta))
 			b2 = b1 + mag*math.sin(math.radians(theta))
 			Nodes.append((l1, b1, l2, b2, lbl, stPose, endPose))
@@ -457,14 +382,12 @@ def getConstr(Nodes_manh, Nodes):
 	return poses
 
 
-def startPoses(X, Y, THETA, lbls):
-	draw(X, Y, lbls)
-	# drawThetaPose(X[0:25], Y[0:25], lbls[0:25], THETA[0:25])
-	# exit(1)
+def startPoses(X, Y, THETA, LBL):
+	draw(X, Y, LBL)
 
-	Node_meta = meta(X, Y, lbls)
+	Node_meta = meta(X, Y, LBL)
 	Node_meta = outRemove(Node_meta)
-	# drawMeta(Node_meta)
+	drawMeta(Node_meta)
 
 	Nodes = []
 
@@ -483,7 +406,7 @@ def startPoses(X, Y, THETA, lbls):
 	Nodes = extManh(Nodes_manh)
 	drawManh(Nodes)
 
-	# writeMlp(Nodes, True)
+	writeMlp(Nodes, True)
 
 	poses = getConstr(Nodes_manh, Nodes)
 
@@ -491,9 +414,6 @@ def startPoses(X, Y, THETA, lbls):
 
 
 if __name__ == '__main__':
-	(X, Y, THETA) = readKitti(argv[1])
-	lbls = readLabels(argv[2])
-	# lmt = 850	# 1054
-	# X = X[0:lmt]; Y = Y[0:lmt]; THETA = THETA[0:lmt]; lbls = lbls[0:lmt]
+	X, Y, THETA, LBL = read(argv[1])
 
-	startPoses(X, Y, THETA, lbls)
+	startPoses(X, Y, THETA, LBL)

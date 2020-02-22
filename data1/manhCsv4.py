@@ -435,8 +435,8 @@ def start(X, Y, THETA, LBL):
 
 if __name__ == '__main__':
 	fileName = str(argv[1])
-	(X, Y, THETA, LBL) = readCsv(fileName)
-	# (X, Y, THETA, LBL) = readTxt(fileName)
+	# (X, Y, THETA, LBL) = readCsv(fileName)
+	(X, Y, THETA, LBL) = readTxt(fileName)
 	
 	# X = X[0:3000]; Y = Y[0:3000]; LBL = LBL[0:3000]
 	# X = X[3100: 6000]; Y = Y[3100: 6000]; LBL = LBL[3100: 6000]

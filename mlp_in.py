@@ -130,15 +130,15 @@ if __name__ == '__main__':
 
 	(Node_meta, Node_mid) = meta(X, Y, THETA, LBL)
 
-	Node_meta = Node_meta[7:-1]; Node_mid = Node_mid[7: -1]
+	# Node_meta = Node_meta[7:-1]; Node_mid = Node_mid[7: -1]
 
 	drawNode(Node_meta, Node_mid)
+	print(np.array(Node_meta))
+	# poses = open("mlp_in.txt", 'w')
+	# for line in Node_meta:
+	# 	info = str(line[0])+" "+str(line[1])+" "+ str(line[2])+" "+ str(line[3])+" "+ str(line[4]) 
+	# 	poses.write(info)
+	# 	poses.write("\n")
 
-	poses = open("mlp_in.txt", 'w')
-	for line in Node_meta:
-		info = str(line[0])+" "+str(line[1])+" "+ str(line[2])+" "+ str(line[3])+" "+ str(line[4]) 
-		poses.write(info)
-		poses.write("\n")
-
-	poses.close()
+	# poses.close()
 	

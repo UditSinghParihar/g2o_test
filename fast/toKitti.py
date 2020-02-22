@@ -62,14 +62,22 @@ def convert(X, Y, THETA):
 	return A
 
 
-if __name__ == '__main__':
-	(X, Y, THETA) = readG2o(argv[1])
+def draw(X, Y, THETA):
+	ax = plt.subplot(111)
+	ax.plot(X, Y, 'ro')
+	ax.plot(X, Y, 'k-')
 
-	# (X, Y, THETA) = readTxt(argv[1])
-	# X = X[4:]; Y = Y[4:]; THETA = THETA[4:]
+	plt.show()
+
+
+if __name__ == '__main__':
+	# (X, Y, THETA) = readG2o(argv[1])
+
+	(X, Y, THETA) = readTxt(argv[1])
+	X = X[70:]; Y = Y[70:]; THETA = THETA[70:]
 	# X = X[0:2800]; Y = Y[0:2800]; THETA = THETA[0:2800]
 	# X = X[3100: 6000]; Y = Y[3100: 6000]; THETA = THETA[3100: 6000]
 
 	A = convert(X, Y, THETA)
 
-	np.savetxt("rtabmap_bak.kitti", A, delimiter=' ')
+	np.savetxt("unopt.kitti", A, delimiter=' ')
