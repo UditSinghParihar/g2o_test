@@ -495,7 +495,7 @@ def start(fileName):
 	
 	# X = X[0:1500]; Y = Y[0:1500]; LBL = LBL[0:1500]
 	# print(len(X))
-	# draw(X, Y, LBL)
+	draw(X, Y, LBL); exit(1)
 
 	Node_meta = meta(X, Y, LBL)
 	Node_meta = outRemove(Node_meta)

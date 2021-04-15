@@ -8,4 +8,4 @@
  	`4th col` : label of a node  
 
 2. EVO command:  
-	`evo_traj kitti opt.kitti --ref ground_truth.kitti --align  --plot --plot_mode xy`
+	`evo_traj kitti opt.kitti --ref ground_truth.kitti -a --n_to_align 1 --plot --plot_mode xy --save_as_kitti`

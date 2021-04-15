@@ -61,7 +61,7 @@ def printNodes(Node_meta):
 	np.set_printoptions(precision=6)
 	np.set_printoptions(suppress=True)
 	Node_meta = np.array(Node_meta)
-	print repr(Node_meta)
+	print(repr(Node_meta))
 
 
 if __name__ == '__main__':

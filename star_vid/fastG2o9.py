@@ -292,7 +292,7 @@ def drawAnim(X, Y, LBL, loops=[], blk=False):
 	plt.clf()
 
 
-
+# T1_w: 1 wrt world
 def animate(X, Y, THETA, LBL):
 	trans = []
 
