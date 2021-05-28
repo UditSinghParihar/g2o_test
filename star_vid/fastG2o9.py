@@ -296,6 +296,7 @@ def drawAnim(X, Y, LBL, loops=[], blk=False):
 def animate(X, Y, THETA, LBL):
 	trans = []
 
+	# Converting noisy poses into odometry transformations
 	for i in range(1, len(X)):
 		p1 = (X[i-1], Y[i-1], THETA[i-1])
 		p2 = (X[i], Y[i], THETA[i])
@@ -307,6 +308,7 @@ def animate(X, Y, THETA, LBL):
 	Xp = []; Yp = []; THETAp = []
 	Xp.append(X[0]); Yp.append(Y[0]); THETAp.append(THETA[0])
 
+	# Calculate the new pose based on the transformation and the previous pose
 	for i in range(len(trans)):
 		p1 = (Xp[i], Yp[i], THETAp[i])
 		T1_w = np.array([[math.cos(p1[2]), -math.sin(p1[2]), p1[0]], [math.sin(p1[2]), math.cos(p1[2]), p1[1]], [0, 0, 1]])
