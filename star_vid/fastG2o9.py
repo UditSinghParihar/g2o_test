@@ -81,7 +81,7 @@ def drawTheta(X, Y, LBL, thetas):
 def draw(X, Y, LBL):
 	X0 = []; Y0 = []; X1 = []; Y1 = []; X2 = []; Y2 =[]; X3 = []; Y3 = [];
 	
-	for i in xrange(len(X)):
+	for i in range(len(X)):
 		if LBL[i] == 0:
 			X0.append(X[i])
 			Y0.append(Y[i])
@@ -257,7 +257,7 @@ def readKitti(fileName):
 def drawAnim(X, Y, LBL, loops=[], blk=False):
 	X0 = []; Y0 = []; X1 = []; Y1 = []; X2 = []; Y2 =[]; X3 = []; Y3 = [];
 	
-	for i in xrange(len(LBL)):
+	for i in range(len(LBL)):
 		if LBL[i] == 0:
 			X0.append(X[i])
 			Y0.append(Y[i])
@@ -307,7 +307,7 @@ def animate(X, Y, THETA, LBL):
 	Xp = []; Yp = []; THETAp = []
 	Xp.append(X[0]); Yp.append(Y[0]); THETAp.append(THETA[0])
 
-	for i in xrange(len(trans)):
+	for i in range(len(trans)):
 		p1 = (Xp[i], Yp[i], THETAp[i])
 		T1_w = np.array([[math.cos(p1[2]), -math.sin(p1[2]), p1[0]], [math.sin(p1[2]), math.cos(p1[2]), p1[1]], [0, 0, 1]])
 		T2_1 = trans[i]

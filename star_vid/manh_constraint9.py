@@ -32,14 +32,14 @@ def getPositve(ang):
 
 
 def blueFix(st, end, X, Y, LBL, Node_meta):
-	mid = st + (end - st)/2
+	mid = int(st + (end - st)/2)
 
 	xMid = 0; yMid =0; fill = True
 
-	for i in xrange(st, end-9):
+	for i in range(st, end-9):
 		if(fill == True):
-			X1 = [X[j] for j in xrange(i, i+8)]; Y1 = [Y[j] for j in xrange(i, i+8)] 
-			X2 = [X[j] for j in xrange(i+8, i+16)]; Y2 = [Y[j] for j in xrange(i+8, i+16)]
+			X1 = [X[j] for j in range(i, i+8)]; Y1 = [Y[j] for j in range(i, i+8)] 
+			X2 = [X[j] for j in range(i+8, i+16)]; Y2 = [Y[j] for j in range(i+8, i+16)]
 
 			(m1, c1, _, _, _) = stats.linregress(X1, Y1)
 			(m2, c2, _, _, _) = stats.linregress(X2, Y2)
@@ -83,12 +83,12 @@ def meta(X, Y, LBL):
 	Node_meta = []
 	st = end = 0
 
-	for i in xrange(1, len(LBL)):
+	for i in range(1, len(LBL)):
 		if LBL[i] == LBL[i-1]:
 			end = i
 			continue
 
-		mid = st + (end - st)/2
+		mid = int(st + (end - st)/2)
 		
 		if (LBL[mid] == 1):
 			blueFix(st, end, X, Y, LBL, Node_meta)
@@ -139,7 +139,7 @@ def drawTheta(Node_meta, thetas):
 def draw(X, Y, LBL):
 	X0 = []; Y0 = []; X1 = []; Y1 = []; X2 = []; Y2 =[]; X3 = []; Y3 = [];
 	
-	for i in xrange(len(LBL)):
+	for i in range(len(LBL)):
 		if LBL[i] == 0:
 			X0.append(X[i])
 			Y0.append(Y[i])
@@ -277,7 +277,7 @@ def manh(Node_meta, thetas):
 	Nodes.append((leng, accTheta, line[4], line[5], line[6]))
 	# print("Total theta: ", accTheta, "Length: ", leng)
 
-	for i in xrange(1, len(Node_meta)):
+	for i in range(1, len(Node_meta)):
 		line = Node_meta[i]
 		x = [line[0], line[2]]; y = [line[1], line[3]]
 		leng = ((x[0]-x[1])**2 + (y[0]-y[1])**2)**(0.5)

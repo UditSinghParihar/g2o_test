@@ -1,3 +1,5 @@
 topo_vid/
 rtabmap/data/images/
 rtabmap/res/rtabmap_occ.mp4
+*__pycache__/*
+*.pyc
